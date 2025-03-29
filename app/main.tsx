@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { toast, Toaster } from '../components/ui/sonner';
 import { BrowserRouter, Route, Routes, useLocation, useNavigate } from 'react-router'
 import { routes } from 'virtual:recommand-file-based-router'
@@ -7,8 +7,6 @@ import { useMenuItemActions } from '@core/lib/menu-store';
 import { LogOut } from 'lucide-react';
 import { useUserStore } from '@core/lib/user-store';
 import { useUser } from '@core/hooks/use-user';
-
-const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password", "/reset-password"];
 
 const renderRoute = (r: typeof routes[number]) => {
     return (
@@ -50,16 +48,31 @@ export default function Main({ children }: { children: React.ReactNode }) {
     </BrowserRouter>;
 }
 
+function getPublicPaths(routeTree: typeof routes[number][]) {
+    const publicPaths: string[] = [];
+    for (const route of routeTree) {
+        if (route.relativePath.startsWith("app/(public)/")) {
+            publicPaths.push(route.route);
+        }
+        if (route.children.length > 0) {
+            const childrenPaths = getPublicPaths(route.children);
+            publicPaths.push(...childrenPaths);
+        }
+    }
+    return publicPaths;
+}
 
 const RouterInner = () => {
     const { user, isLoading } = useUser();
     const location = useLocation();
     const navigate = useNavigate();
 
+    const publicPaths = useMemo(() => getPublicPaths(routes), [routes]);
+
     useEffect(() => {
         if (!isLoading && !user) {
             // If not on a public route, redirect to login
-            if (!PUBLIC_ROUTES.some(route => location.pathname.startsWith(route))) {
+            if (!publicPaths.some(route => location.pathname.startsWith(route))) {
                 console.log("Redirecting to login");
                 navigate("/login");
             }
