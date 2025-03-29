@@ -19,9 +19,10 @@ const renderRoute = (r: typeof routes[number]) => {
 
 export default function Main({ children }: { children: React.ReactNode }) {
     return <BrowserRouter>
+        {children}
         <Routes>
             {routes.map((route) => renderRoute(route))}
         </Routes>
-        <Toaster />
+        <Toaster richColors />
     </BrowserRouter>;
 }

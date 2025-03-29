@@ -28,6 +28,7 @@
     "paths": {
       "@recommand": ["../recommand-framework/index.ts"],
       "@recommand/*": ["../recommand-framework/*"],
+      "@core/*": ["*"],
       "virtual:recommand-file-based-router": ["../recommand-framework/app/src/vite-env.d.ts"]
     }
   }
