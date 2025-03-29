@@ -28,16 +28,6 @@ export default function Page() {
               title: `Test ${now}`,
               icon: Paperclip,
               onClick: () => { },
-              items: [
-                {
-                  title: `Test ${now}`,
-                  onClick: () => { },
-                },
-                {
-                  title: `Test2 ${now}`,
-                  onClick: () => { },
-                },
-              ],
             });
           }}>
           Register new menu item

@@ -33,8 +33,6 @@ export default function Main({ children }: { children: React.ReactNode }) {
             title: 'Logout',
             icon: LogOut,
             onClick: async () => {
-                toast.success("Logging out...");
-
                 try {
                     await logout();
                     toast.success("Logged out successfully");
