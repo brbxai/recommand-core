@@ -3,8 +3,7 @@ import { Server } from "@recommand/lib/api";
 import { Logger } from "@recommand/lib/logger";
 import { db } from "@recommand/db";
 import { migrations } from "@recommand/db/schema";
-import signup from "api/auth/signup";
-import login from "api/auth/login";
+import auth from "api/auth";
 
 let logger: Logger;
 
@@ -23,7 +22,6 @@ server.get("/tasks", async (c) => {
   });
 });
 
-server.route("/", signup);
-server.route("/", login);
+server.route("/", auth);
 
 export default server;

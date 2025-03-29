@@ -5,6 +5,7 @@ import {
   AudioWaveform,
   Command,
   GalleryVerticalEnd,
+  LogIn,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
@@ -20,14 +21,11 @@ import {
   SidebarRail,
 } from "@core/components/ui/sidebar"
 import { useLocation } from "react-router-dom"
+import { useUser } from "@core/hooks/use-user"
+import { ButtonLink } from "@core/components/ui/button"
 
-// This is sample data.
+// This is sample data
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
   teams: [
     {
       name: "Acme Inc",
@@ -50,6 +48,7 @@ const data = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const menuItems = useMenuItems();
   const location = useLocation();
+  const { user } = useUser();
 
   // Build the menu hierarchy for main items
   const mainItems = menuItems
@@ -104,6 +103,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       return groups;
     }, {} as Record<string, typeof menuItems>);
 
+  // Transform user data for NavUser component
+  const userData = user ? {
+    name: user.email.split('@')[0], // Use part before @ as name
+    email: user.email,
+    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.email.split('@')[0])}&background=random`,
+  } : null;
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -113,7 +119,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={mainItems} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} userMenuItems={userMenuItems} />
+        {userData ? (
+          <NavUser user={userData} userMenuItems={userMenuItems} />
+        ) : (
+          <div className="p-4">
+            <ButtonLink
+              variant="outline" 
+              className="w-full" 
+              href="/login"
+            >
+              <LogIn className="mr-2 h-4 w-4" />
+              Login
+            </ButtonLink>
+          </div>
+        )}
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

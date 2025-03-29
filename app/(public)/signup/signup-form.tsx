@@ -1,4 +1,3 @@
-import { stringifyActionFailure } from "@recommand/lib/utils";
 import { Button } from "../../../components/ui/button";
 import {
   Card,
@@ -10,12 +9,10 @@ import {
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { PasswordInput } from "../../../components/form/password-input";
-import { type FormEvent, useState } from "react";
-import type { Signup } from "api/auth/signup";
-import { rc } from "@recommand/lib/client";
+import { type FormEvent, useState, useEffect } from "react";
 import { toast } from "../../../components/ui/sonner";
 import { cn } from "../../../lib/utils";
-const client = rc<Signup>('core');
+import { useUserStore } from "../../../lib/user-store";
 
 export default function SignupForm({
   className,
@@ -23,34 +20,19 @@ export default function SignupForm({
 }: React.ComponentPropsWithoutRef<"div">) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { signup, error } = useUserStore();
+
+  useEffect(() => {
+    if (error) {
+      toast.error("Signup failed", {
+        description: error,
+      });
+    }
+  }, [error]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
-    try {
-      const formData = {
-        email,
-        password,
-      };
-      
-      const res = await client.auth.signup.$post({
-        json: formData,
-      });
-
-      const json = await res.json();
-      if(json.success) {
-        toast.success("Signup successful");
-      } else {
-        toast.error("Signup failed", {
-          description: stringifyActionFailure(json.errors),
-        });
-      }
-      console.log(res);
-    } catch (error) {
-      toast.error("Signup failed", {
-        description: "An error occurred during signup",
-      });
-    }
+    await signup(email, password);
   };
 
   return (

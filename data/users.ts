@@ -15,7 +15,7 @@ export const getCurrentUser = async (c: Context) => {
     return null;
   }
   const userId = session.userId;
-  const { password, ...rest } = getTableColumns(users); // exclude "password" column
+  const { passwordHash: password, ...rest } = getTableColumns(users); // exclude "password" column
   const data = await db
     .select({
       ...rest,

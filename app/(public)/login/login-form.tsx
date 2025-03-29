@@ -1,4 +1,3 @@
-import { stringifyActionFailure } from "@recommand/lib/utils";
 import { Button } from "../../../components/ui/button";
 import {
   Card,
@@ -10,13 +9,11 @@ import {
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { PasswordInput } from "../../../components/form/password-input";
-import { rc } from "@recommand/lib/client";
 import { toast } from "../../../components/ui/sonner";
-import type { Login } from "api/auth/login";
 import { type FormEvent, useState } from "react";
 import { cn } from "../../../lib/utils";
-
-const client = rc<Login>('core');
+import { useUserStore } from "../../../lib/user-store";
+import { useNavigate } from "react-router-dom";
 
 export function LoginForm({
   className,
@@ -24,31 +21,19 @@ export function LoginForm({
 }: React.ComponentPropsWithoutRef<"div">) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { login } = useUserStore();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
     try {
-      const formData = {
-        email,
-        password,
-      };
-      
-      const res = await client.auth.login.$post({
-        json: formData,
-      });
-
-      const json = await res.json();
-      if(json.success) {
-        toast.success("Login successful");
-      } else {
-        toast.error("Login failed", {
-          description: stringifyActionFailure(json.errors),
-        });
+      const success = await login(email, password);
+      if (success) {
+        navigate("/");
       }
     } catch (error) {
       toast.error("Login failed", {
-        description: "An error occurred during login",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
       });
     }
   };
