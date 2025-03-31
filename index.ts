@@ -4,6 +4,7 @@ import { Logger } from "@recommand/lib/logger";
 import { db } from "@recommand/db";
 import { migrations } from "@recommand/db/schema";
 import auth from "api/auth";
+import apiKeys from "api/api-keys";
 
 let logger: Logger;
 
@@ -23,5 +24,6 @@ server.get("/tasks", async (c) => {
 });
 
 server.route("/", auth);
+server.route("/", apiKeys);
 
 export default server;

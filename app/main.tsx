@@ -4,7 +4,7 @@ import { BrowserRouter, Route, Routes, useLocation, useNavigate } from 'react-ro
 import { routes } from 'virtual:recommand-file-based-router'
 import './index.css'
 import { useMenuItemActions } from '@core/lib/menu-store';
-import { LogOut, Settings } from 'lucide-react';
+import { KeyRound, LogOut, Settings } from 'lucide-react';
 import { useUserStore } from '@core/lib/user-store';
 import { useUser } from '@core/hooks/use-user';
 
@@ -31,6 +31,13 @@ export default function Main({ children }: { children: React.ReactNode }) {
             id: 'main.settings',
             title: 'Settings',
             icon: Settings,
+        });
+
+        registerMenuItem({
+            id: 'user.session.api_keys',
+            title: 'API Keys',
+            icon: KeyRound,
+            href: '/api-keys',
         });
 
         registerMenuItem({

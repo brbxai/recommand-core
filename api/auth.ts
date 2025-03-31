@@ -5,7 +5,7 @@ import { createSession, deleteSession } from "lib/session";
 import { actionFailure, actionSuccess } from "@recommand/lib/utils";
 import { Server } from "@recommand/lib/api";
 import { db } from "@recommand/db";
-import { users } from "../../db/schema";
+import { users } from "@core/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { createTeam, getUserTeams } from "@core/data/teams";
