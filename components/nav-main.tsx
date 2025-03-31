@@ -16,6 +16,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  useSidebar,
 } from "@core/components/ui/sidebar"
 
 export function NavMain({
@@ -34,6 +35,8 @@ export function NavMain({
     }[]
   }[]
 }) {
+  const { state } = useSidebar()
+
   return (
     <SidebarGroup>
       <SidebarMenu>
@@ -66,32 +69,36 @@ export function NavMain({
                         </Link>
                       )}
                     </SidebarMenuButton>
-                    <CollapsibleTrigger asChild>
-                      <button className="p-2 hover:bg-accent rounded-md">
-                        <ChevronRight className="size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                      </button>
-                    </CollapsibleTrigger>
+                    {state === "expanded" && (
+                      <CollapsibleTrigger asChild>
+                        <button className="p-2 hover:bg-accent rounded-md">
+                          <ChevronRight className="size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                        </button>
+                      </CollapsibleTrigger>
+                    )}
                   </div>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      {item.items.map((subItem) => (
-                        <SidebarMenuSubItem key={subItem.title}>
-                          <SidebarMenuSubButton 
-                            asChild={!subItem.onClick}
-                            onClick={subItem.onClick}
-                          >
-                            {subItem.onClick ? (
-                              <span>{subItem.title}</span>
-                            ) : (
-                              <Link to={subItem.url}>
+                  {state === "expanded" && (
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {item.items.map((subItem) => (
+                          <SidebarMenuSubItem key={subItem.title}>
+                            <SidebarMenuSubButton 
+                              asChild={!subItem.onClick}
+                              onClick={subItem.onClick}
+                            >
+                              {subItem.onClick ? (
                                 <span>{subItem.title}</span>
-                              </Link>
-                            )}
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
+                              ) : (
+                                <Link to={subItem.url}>
+                                  <span>{subItem.title}</span>
+                                </Link>
+                              )}
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  )}
                 </SidebarMenuItem>
               </Collapsible>
             );
