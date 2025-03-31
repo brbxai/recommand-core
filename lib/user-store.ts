@@ -56,7 +56,7 @@ export const useUserStore = create<UserState>((set, get) => ({
         set({ 
             user: transformedUser, 
             teams: transformedUser.teams, 
-            activeTeam: transformedUser.teams?.[0] || null,
+            activeTeam: get().activeTeam || transformedUser.teams?.[0] || null,
             isLoading: false 
         });
       } else if (!userData.success) {

@@ -5,7 +5,9 @@ export function useUser() {
   const store = useUserStore();
 
   useEffect(() => {
-    store.fetchUser();
+    if (!store.user) {
+      store.fetchUser();
+    }
   }, []);
 
   return store;

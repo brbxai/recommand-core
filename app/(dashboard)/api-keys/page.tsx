@@ -136,7 +136,7 @@ export default function Page() {
             sortingFn: "datetime",
         },
         {
-            accessorKey: "id",
+            id: "actions",
             header: "",
             size: 100,
             cell: ({ row }) => {
