@@ -1,6 +1,7 @@
 "use client"
 
 import { ChevronRight, type LucideIcon } from "lucide-react"
+import { Link } from "react-router-dom"
 
 import {
   Collapsible,
@@ -59,10 +60,10 @@ export function NavMain({
                           <span>{item.title}</span>
                         </>
                       ) : (
-                        <a href={item.url}>
+                        <Link to={item.url}>
                           {item.icon && <item.icon />}
                           <span>{item.title}</span>
-                        </a>
+                        </Link>
                       )}
                     </SidebarMenuButton>
                     <CollapsibleTrigger asChild>
@@ -82,9 +83,9 @@ export function NavMain({
                             {subItem.onClick ? (
                               <span>{subItem.title}</span>
                             ) : (
-                              <a href={subItem.url}>
+                              <Link to={subItem.url}>
                                 <span>{subItem.title}</span>
-                              </a>
+                              </Link>
                             )}
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
@@ -109,10 +110,10 @@ export function NavMain({
                     <span>{item.title}</span>
                   </>
                 ) : (
-                  <a href={item.url}>
+                  <Link to={item.url}>
                     {item.icon && <item.icon />}
                     <span>{item.title}</span>
-                  </a>
+                  </Link>
                 )}
               </SidebarMenuButton>
             </SidebarMenuItem>

@@ -4,6 +4,7 @@ import * as React from "react"
 import {
   ChevronsUpDown,
 } from "lucide-react"
+import { Link } from "react-router-dom"
 
 import {
   Avatar,
@@ -83,9 +84,22 @@ export function NavUser({
               <React.Fragment key={group}>
                 <DropdownMenuGroup>
                   {items.map((item) => (
-                    <DropdownMenuItem key={item.id} onClick={item.onClick}>
-                      {item.icon && <item.icon />}
-                      {item.title}
+                    <DropdownMenuItem 
+                      key={item.id} 
+                      onClick={item.onClick}
+                      asChild={!item.onClick && !!item.href}
+                    >
+                      {item.onClick ? (
+                        <>
+                          {item.icon && <item.icon />}
+                          {item.title}
+                        </>
+                      ) : item.href ? (
+                        <Link to={item.href}>
+                          {item.icon && <item.icon />}
+                          {item.title}
+                        </Link>
+                      ) : null}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuGroup>
