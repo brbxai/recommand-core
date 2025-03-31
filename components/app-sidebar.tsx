@@ -2,9 +2,6 @@
 
 import * as React from "react"
 import {
-  AudioWaveform,
-  Command,
-  GalleryVerticalEnd,
   LogIn,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
@@ -24,31 +21,10 @@ import { useLocation } from "react-router-dom"
 import { useUser } from "@core/hooks/use-user"
 import { ButtonLink } from "@core/components/ui/button"
 
-// This is sample data
-const data = {
-  teams: [
-    {
-      name: "Acme Inc",
-      logo: GalleryVerticalEnd,
-      plan: "Enterprise",
-    },
-    {
-      name: "Acme Corp.",
-      logo: AudioWaveform,
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: Command,
-      plan: "Free",
-    },
-  ],
-}
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const menuItems = useMenuItems();
   const location = useLocation();
-  const { user } = useUser();
+  const { user, teams, activeTeam, setActiveTeam } = useUser();
 
   // Build the menu hierarchy for main items
   const mainItems = menuItems
@@ -113,7 +89,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <TeamSwitcher 
+          teams={teams} 
+          activeTeam={activeTeam}
+          setActiveTeam={setActiveTeam}
+        />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={mainItems} />

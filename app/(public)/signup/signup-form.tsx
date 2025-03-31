@@ -9,10 +9,11 @@ import {
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { PasswordInput } from "../../../components/form/password-input";
-import { type FormEvent, useState, useEffect } from "react";
+import { type FormEvent, useState } from "react";
 import { toast } from "../../../components/ui/sonner";
 import { cn } from "../../../lib/utils";
 import { useUserStore } from "../../../lib/user-store";
+import { useNavigate } from "react-router-dom";
 
 export default function SignupForm({
   className,
@@ -20,19 +21,19 @@ export default function SignupForm({
 }: React.ComponentPropsWithoutRef<"div">) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { signup, error } = useUserStore();
-
-  useEffect(() => {
-    if (error) {
-      toast.error("Signup failed", {
-        description: error,
-      });
-    }
-  }, [error]);
+  const { signup } = useUserStore();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    await signup(email, password);
+    try {
+      await signup(email, password);
+      navigate("/");
+    } catch (error) {
+      toast.error("Signup failed", {
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+      });
+    }
   };
 
   return (

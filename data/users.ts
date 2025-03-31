@@ -4,6 +4,7 @@ import { verifySession } from "../lib/session";
 import { users } from "../db/schema";
 import { eq, getTableColumns } from "drizzle-orm";
 import type { Context } from "@recommand/lib/api";
+import { teamMembers, teams } from "@core/db/schema";
 
 export type UserWithoutPassword = Omit<typeof users.$inferSelect, "password">;
 
@@ -16,17 +17,29 @@ export const getCurrentUser = async (c: Context) => {
   }
   const userId = session.userId;
   const { passwordHash: password, ...rest } = getTableColumns(users); // exclude "password" column
+  
   const data = await db
     .select({
       ...rest,
+      teams: teams,
     })
     .from(users)
+    .leftJoin(teamMembers, eq(users.id, teamMembers.userId))
+    .leftJoin(teams, eq(teamMembers.teamId, teams.id))
     .where(eq(users.id, userId));
+
   if (data.length === 0) {
     return null;
   }
+
+  // Transform the data to group teams under the user
   const user = data[0];
-  return user as UserWithoutPassword;
+  const userTeams = data.map(row => row.teams).filter(Boolean);
+  
+  return {
+    ...user,
+    teams: userTeams,
+  } as UserWithoutPassword & { teams: typeof teams.$inferSelect[] };
 };
 
 export const createUser = async (userInfo: {
@@ -51,7 +64,7 @@ export const createUser = async (userInfo: {
     .insert(users)
     .values({
       email: userInfo.email,
-      password: hashedPassword,
+      passwordHash: hashedPassword,
     })
     .returning({ id: users.id, isAdmin: users.isAdmin });
 

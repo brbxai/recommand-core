@@ -8,6 +8,7 @@ import { db } from "@recommand/db";
 import { users } from "../../db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
+import { createTeam, getUserTeams } from "@core/data/teams";
 
 const server = new Server();
 
@@ -73,6 +74,11 @@ const signup = server.post(
       // Create user
       const user = await createUser(data);
 
+      // Create default team
+      await createTeam(user.id, {
+        name: "My Team",
+      });
+
       // Create session
       await createSession(c, user);
 
@@ -112,6 +118,22 @@ const me = server.get("/auth/me", async (c) => {
   }
 });
 
-export type Auth = typeof login | typeof signup | typeof logout | typeof me;
+const teams = server.get("/auth/teams", async (c) => {
+  try {
+    const user = await getCurrentUser(c);
+    if (!user) {
+      return c.json(actionFailure("Not authenticated"), 401);
+    }
+    const teams = await getUserTeams(user.id);
+    return c.json(actionSuccess({ data: teams }));
+  } catch (e) {
+    console.error(e);
+    return c.json(actionFailure("Internal server error"), 500);
+  }
+});
+
+
+
+export type Auth = typeof login | typeof signup | typeof logout | typeof me | typeof teams;
 
 export default server; 

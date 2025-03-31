@@ -27,10 +27,8 @@ export function LoginForm({
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      const success = await login(email, password);
-      if (success) {
-        navigate("/");
-      }
+      await login(email, password);
+      navigate("/");
     } catch (error) {
       toast.error("Login failed", {
         description: error instanceof Error ? error.message : "An unexpected error occurred",

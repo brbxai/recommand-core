@@ -30,6 +30,7 @@ export const teams = pgTable("teams", {
     .primaryKey()
     .$defaultFn(() => "team_" + ulid()),
   name: text("name").notNull(),
+  teamDescription: text("team_description").notNull().default("Developer"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "string" })
     .defaultNow()

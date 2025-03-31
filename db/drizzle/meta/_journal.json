@@ -29,6 +29,20 @@
       "when": 1743270751429,
       "tag": "20250329175231_open_galactus",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1743412189015,
+      "tag": "20250331090949_rare_hitman",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1743413952002,
+      "tag": "20250331093912_nappy_iron_lad",
+      "breakpoints": true
     }
   ]
 }
