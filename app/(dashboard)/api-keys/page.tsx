@@ -14,12 +14,6 @@ import { useUser } from "@core/hooks/use-user";
 import { Trash2, Loader2, Copy } from "lucide-react";
 import { SortableHeader } from "@core/components/data-table/sortable-header";
 
-interface ApiResponse<T> {
-    success: boolean;
-    apiKeys?: T[];
-    errors?: { [key: string]: string[] };
-}
-
 const client = rc<ApiKeys>('core');
 
 export default function Page() {
@@ -41,14 +35,18 @@ export default function Page() {
             const response = await client[':teamId']['api-keys'].$get({
                 param: { teamId: activeTeam.id }
             });
-            const json = await response.json() as ApiResponse<ApiKey>;
+            const json = await response.json();
             
             if (!json.success || !Array.isArray(json.apiKeys)) {
                 console.error('Invalid API response format:', json);
-                toast.error('Failed to load API keys: ' + stringifyActionFailure(json.errors ?? {}));
+                toast.error('Failed to load API keys');
                 setApiKeys([]);
             } else {
-                setApiKeys(json.apiKeys);
+                setApiKeys(json.apiKeys.map(key => ({
+                    ...key,
+                    createdAt: new Date(key.createdAt),
+                    updatedAt: key.updatedAt,
+                })));
             }
         } catch (error) {
             console.error('Error fetching API keys:', error);
