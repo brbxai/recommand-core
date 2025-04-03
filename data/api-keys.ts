@@ -1,4 +1,4 @@
-import { apiKeys } from "@core/db/schema";
+import { apiKeys, users } from "@core/db/schema";
 import { db } from "@recommand/db";
 import { and, eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
@@ -27,6 +27,31 @@ export async function createApiKey(userId: string, teamId: string, name: string)
         secret: readableSecret,
     };
     
+}
+
+export async function checkApiKey(apiKeyId: string, secret: string) {
+    const res = await db
+        .select()
+        .from(apiKeys)
+        .where(and(eq(apiKeys.id, apiKeyId)))
+        .innerJoin(users, eq(apiKeys.userId, users.id));
+
+    if (res.length === 0) {
+        return null;
+    }
+
+    const apiKey = res[0];
+
+    // Check if the secret is correct
+    const isSecretCorrect = await bcrypt.compare(secret, apiKey.api_keys.secretHash);
+    if (!isSecretCorrect) {
+        return null;
+    }
+
+    return {
+        user: apiKey.users,
+        apiKey: apiKey.api_keys,
+    };
 }
 
 export async function deleteApiKey(userId: string, teamId: string, apiKeyId: string) {
