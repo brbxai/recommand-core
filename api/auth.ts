@@ -1,6 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { createUser } from "data/users";
+import { createUser, getCurrentUser } from "data/users";
 import { createSession, deleteSession } from "lib/session";
 import { actionFailure, actionSuccess } from "@recommand/lib/utils";
 import { Server } from "@recommand/lib/api";
@@ -108,7 +108,8 @@ const logout = server.post("/auth/logout", async (c) => {
 
 const me = server.get("/auth/me", requireAuth(), async (c) => {
   try {
-    return c.json(actionSuccess({ data: c.var.user }));
+    const user = await getCurrentUser(c);
+    return c.json(actionSuccess({ data: user }));
   } catch (e) {
     console.error(e);
     return c.json(actionFailure("Internal server error"), 500);
