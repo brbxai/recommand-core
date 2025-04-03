@@ -1,6 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { createUser, getCurrentUser } from "data/users";
+import { createUser } from "data/users";
 import { createSession, deleteSession } from "lib/session";
 import { actionFailure, actionSuccess } from "@recommand/lib/utils";
 import { Server } from "@recommand/lib/api";
@@ -9,6 +9,7 @@ import { users } from "@core/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { createTeam, getUserTeams } from "@core/data/teams";
+import { requireAuth } from "@core/lib/auth-middleware";
 
 const server = new Server();
 
@@ -105,26 +106,18 @@ const logout = server.post("/auth/logout", async (c) => {
   }
 });
 
-const me = server.get("/auth/me", async (c) => {
+const me = server.get("/auth/me", requireAuth(), async (c) => {
   try {
-    const user = await getCurrentUser(c);
-    if (!user) {
-      return c.json(actionFailure("Not authenticated"), 401);
-    }
-    return c.json(actionSuccess({ data: user }));
+    return c.json(actionSuccess({ data: c.var.user }));
   } catch (e) {
     console.error(e);
     return c.json(actionFailure("Internal server error"), 500);
   }
 });
 
-const teams = server.get("/auth/teams", async (c) => {
+const teams = server.get("/auth/teams", requireAuth(), async (c) => {
   try {
-    const user = await getCurrentUser(c);
-    if (!user) {
-      return c.json(actionFailure("Not authenticated"), 401);
-    }
-    const teams = await getUserTeams(user.id);
+    const teams = await getUserTeams(c.var.user.id);
     return c.json(actionSuccess({ data: teams }));
   } catch (e) {
     console.error(e);
