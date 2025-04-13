@@ -4,7 +4,7 @@ import { verifySession } from "./session";
 import { actionFailure } from "@recommand/lib/utils";
 import { getTeam, isMember, type Team } from "@core/data/teams";
 
-type AuthenticatedUserContext = {
+export type AuthenticatedUserContext = {
   Variables: {
     user: {
       id: string;
@@ -14,7 +14,7 @@ type AuthenticatedUserContext = {
   };
 };
 
-type AuthenticatedTeamContext = {
+export type AuthenticatedTeamContext = {
   Variables: {
     team: Team;
   };
@@ -26,6 +26,25 @@ export function requireAuth() {
     const session = await verifySession(c);
     // Fetch user data
     if (!session?.userId) {
+      return c.json(actionFailure("Unauthorized"), 401);
+    }
+
+    // Successfully authenticated, continue to next middleware
+    await next();
+  });
+}
+
+export function requireAdmin() {
+  return createMiddleware<AuthenticatedUserContext>(async (c, next) => {
+    // Verify user's session
+    const session = await verifySession(c);
+    if (!session?.userId) {
+      return c.json(actionFailure("Unauthorized"), 401);
+    }
+
+    // Fetch user data
+    const user: { id: string; isAdmin: boolean } | null = c.get("user");
+    if (!user?.isAdmin) {
       return c.json(actionFailure("Unauthorized"), 401);
     }
 
