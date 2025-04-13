@@ -60,7 +60,7 @@ export function DataTableFacetedFilter<TData, TValue>({
                     variant="secondary"
                     className="rounded-sm px-1 font-normal"
                   >
-                    {selectedValues.size} geselecteerd
+                    {selectedValues.size} selected
                   </Badge>
                 ) : (
                   options

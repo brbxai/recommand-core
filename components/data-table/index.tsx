@@ -18,20 +18,22 @@ import { TableContainer } from "../table-container";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   table: TanstackTable<TData>;
+  showSearch?: boolean;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   table,
+  showSearch = true,
 }: DataTableProps<TData, TValue>) {
   const [globalFilter, setGlobalFilter] = useState("");
   const isGlobalFilterEnabled = table.getState().globalFilter !== undefined;
 
   return (
     <div className="space-y-4">
-      {isGlobalFilterEnabled && (
+      {showSearch && isGlobalFilterEnabled && (
         <Input
-          placeholder="Zoeken..."
+          placeholder="Search..."
           value={globalFilter}
           onChange={(e) => {
             setGlobalFilter(e.target.value);
