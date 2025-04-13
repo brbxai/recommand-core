@@ -63,10 +63,12 @@ export function PageTemplate({ children, breadcrumbs = [], className, mainClassN
             )}
           </div>
         </header>
-        <div className="px-4">
-          <h2 className="text-2xl font-semibold">{breadcrumbs.length > 0 && breadcrumbs[breadcrumbs.length - 1].label || "..."}</h2>
-          {description && <p className="text-muted-foreground text-sm text-balance max-w-lg mt-1">{description}</p>}
-        </div>
+        {breadcrumbs.length > 0 && (
+          <div className="px-4">
+            <h2 className="text-2xl font-semibold">{breadcrumbs[breadcrumbs.length - 1].label || "..."}</h2>
+            {description && <p className="text-muted-foreground text-sm text-balance max-w-lg mt-1">{description}</p>}
+          </div>
+        )}
       </div>
       <main className={cn("p-4", mainClassName)}>
         {children}
