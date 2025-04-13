@@ -28,12 +28,6 @@ export default function Main({ children }: { children: React.ReactNode }) {
     useEffect(() => {
 
         registerMenuItem({
-            id: 'main.settings',
-            title: 'Settings',
-            icon: Settings,
-        });
-
-        registerMenuItem({
             id: 'user.session.api_keys',
             title: 'API Keys',
             icon: KeyRound,
