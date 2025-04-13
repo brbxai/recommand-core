@@ -15,9 +15,10 @@ interface PageProps {
   mainClassName?: string
   style?: React.CSSProperties
   buttons?: React.ReactNode[]
+  description?: string
 }
 
-export function PageTemplate({ children, breadcrumbs = [], className, mainClassName, style, buttons }: PageProps) {
+export function PageTemplate({ children, breadcrumbs = [], className, mainClassName, style, buttons, description }: PageProps) {
   return (
     <SidebarInset
       className={className}
@@ -64,6 +65,7 @@ export function PageTemplate({ children, breadcrumbs = [], className, mainClassN
         </header>
         <div className="px-4">
           <h2 className="text-2xl font-semibold">{breadcrumbs.length > 0 && breadcrumbs[breadcrumbs.length - 1].label || "..."}</h2>
+          {description && <p className="text-muted-foreground text-sm text-balance max-w-lg mt-1">{description}</p>}
         </div>
       </div>
       <main className={cn("p-4", mainClassName)}>

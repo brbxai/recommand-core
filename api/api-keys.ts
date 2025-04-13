@@ -1,6 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { actionSuccess } from "@recommand/lib/utils";
+import { actionFailure, actionSuccess } from "@recommand/lib/utils";
 import { Server } from "@recommand/lib/api";
 import { createApiKey, deleteApiKey, getApiKeys } from "@core/data/api-keys";
 import { requireTeamAccess } from "@core/lib/auth-middleware";
@@ -17,12 +17,16 @@ const _getApiKeys = server.get(
     })
   ),
   async (c) => {
-    const apiKeys = await getApiKeys(c.var.user.id, c.var.team.id);
-    return c.json(
-      actionSuccess({
+    try {
+      const apiKeys = await getApiKeys(c.var.user.id, c.var.team.id);
+      return c.json(
+        actionSuccess({
         apiKeys,
       })
     );
+  } catch (error) {
+      return c.json(actionFailure(error as Error));
+    }
   }
 );
 
@@ -42,12 +46,16 @@ const _createApiKey = server.post(
     })
   ),
   async (c) => {
-    const apiKey = await createApiKey(
-      c.var.user.id,
-      c.var.team.id,
-      c.req.valid("json").name
-    );
-    return c.json(actionSuccess({ apiKey }));
+    try {
+      const apiKey = await createApiKey(
+        c.var.user.id,
+        c.var.team.id,
+        c.req.valid("json").name
+      );
+      return c.json(actionSuccess({ apiKey }));
+    } catch (error) {
+      return c.json(actionFailure(error as Error));
+    }
   }
 );
 
@@ -62,8 +70,12 @@ const _deleteApiKey = server.delete(
     })
   ),
   async (c) => {
-    await deleteApiKey(c.var.user.id, c.var.team.id, c.req.param("apiKeyId"));
-    return c.json(actionSuccess());
+    try {
+      await deleteApiKey(c.var.user.id, c.var.team.id, c.req.param("apiKeyId"));
+      return c.json(actionSuccess());
+    } catch (error) {
+      return c.json(actionFailure(error as Error));
+    }
   }
 );
 
