@@ -209,6 +209,21 @@ export default function Page() {
                     Create API Key
                 </Button>
             </div>
+            <div className="rounded-lg border p-4 space-y-4 max-w-xl bg-muted">
+                <div className="space-y-2">
+                    <h3 className="font-medium">Team ID</h3>
+                    <p className="text-sm text-muted-foreground">This is your unique team identifier (<code className="font-mono">teamId</code>).</p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Input value={activeTeam?.id ?? ''} readOnly className="font-mono" />
+                    <Button variant="outline" onClick={() => {
+                        if (activeTeam?.id) {
+                            navigator.clipboard.writeText(activeTeam.id);
+                            toast.success('Team ID copied to clipboard');
+                        }
+                    }}><Copy className="h-4 w-4" /></Button>
+                </div>
+            </div>
             {newKey && (
                 <div className="rounded-lg border p-4 space-y-4 max-w-xl bg-muted">
                     <div className="space-y-2">
