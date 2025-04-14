@@ -28,7 +28,7 @@ export default function Main({ children }: { children: React.ReactNode }) {
     useEffect(() => {
 
         registerMenuItem({
-            id: 'user.session.api_keys',
+            id: 'user.api.api_keys',
             title: 'API Keys',
             icon: KeyRound,
             href: '/api-keys',
