@@ -1,5 +1,3 @@
-"use client";
-
 import type { InputHTMLAttributes } from "react";
 import { useState } from "react";
 import { Input } from "../ui/input";

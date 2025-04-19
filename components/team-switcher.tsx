@@ -1,7 +1,4 @@
-"use client"
-
-import * as React from "react"
-import { ChevronsUpDown, Plus, GalleryVerticalEnd } from "lucide-react"
+import { ChevronsUpDown, Plus, GalleryVerticalEnd } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,26 +7,26 @@ import {
   DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
-} from "@core/components/ui/dropdown-menu"
+} from "@core/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@core/components/ui/sidebar"
-import type { Team } from "@core/data/teams"
-import { Skeleton } from "@core/components/ui/skeleton"
+} from "@core/components/ui/sidebar";
+import type { Team } from "@core/data/teams";
+import { Skeleton } from "@core/components/ui/skeleton";
 
 export function TeamSwitcher({
   teams,
   activeTeam,
   setActiveTeam,
 }: {
-  teams: Team[]
-  activeTeam: Team | null
-  setActiveTeam: (team: Team) => void
+  teams: Team[];
+  activeTeam: Team | null;
+  setActiveTeam: (team: Team) => void;
 }) {
-  const { isMobile } = useSidebar()
+  const { isMobile } = useSidebar();
 
   if (!activeTeam) {
     return (
@@ -48,11 +45,11 @@ export function TeamSwitcher({
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
-    )
+    );
   }
 
   // Transform team data for display
-  const transformedTeams = teams.map(team => ({
+  const transformedTeams = teams.map((team) => ({
     name: team.name,
     logo: GalleryVerticalEnd,
     plan: team.teamDescription,
@@ -77,8 +74,12 @@ export function TeamSwitcher({
                 <transformedActiveTeam.logo className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{transformedActiveTeam.name}</span>
-                <span className="truncate text-xs">{transformedActiveTeam.plan}</span>
+                <span className="truncate font-medium">
+                  {transformedActiveTeam.name}
+                </span>
+                <span className="truncate text-xs">
+                  {transformedActiveTeam.plan}
+                </span>
               </div>
               <ChevronsUpDown className="ml-auto" />
             </SidebarMenuButton>
@@ -116,5 +117,5 @@ export function TeamSwitcher({
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  )
+  );
 }

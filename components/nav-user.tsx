@@ -1,16 +1,12 @@
-"use client"
-
-import * as React from "react"
-import {
-  ChevronsUpDown,
-} from "lucide-react"
-import { Link } from "react-router-dom"
+import * as React from "react";
+import { ChevronsUpDown } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from "@core/components/ui/avatar"
+} from "@core/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,27 +15,27 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@core/components/ui/dropdown-menu"
+} from "@core/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@core/components/ui/sidebar"
-import type { MenuItem } from "@core/lib/menu-store"
+} from "@core/components/ui/sidebar";
+import type { MenuItem } from "@core/lib/menu-store";
 
 export function NavUser({
   user,
   userMenuItems,
 }: {
   user: {
-    name: string
-    email: string
-    avatar: string
-  }
-  userMenuItems: Record<string, MenuItem[]>
+    name: string;
+    email: string;
+    avatar: string;
+  };
+  userMenuItems: Record<string, MenuItem[]>;
 }) {
-  const { isMobile } = useSidebar()
+  const { isMobile } = useSidebar();
 
   return (
     <SidebarMenu>
@@ -84,8 +80,8 @@ export function NavUser({
               <React.Fragment key={group}>
                 <DropdownMenuGroup>
                   {items.map((item) => (
-                    <DropdownMenuItem 
-                      key={item.id} 
+                    <DropdownMenuItem
+                      key={item.id}
                       onClick={item.onClick}
                       asChild={!item.onClick && !!item.href}
                     >
@@ -103,12 +99,14 @@ export function NavUser({
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuGroup>
-                {index < Object.keys(userMenuItems).length - 1 && <DropdownMenuSeparator />}
+                {index < Object.keys(userMenuItems).length - 1 && (
+                  <DropdownMenuSeparator />
+                )}
               </React.Fragment>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  )
+  );
 }

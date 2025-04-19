@@ -1,13 +1,11 @@
-"use client"
-
-import { ChevronRight, type LucideIcon } from "lucide-react"
-import { Link } from "react-router-dom"
+import { ChevronRight, type LucideIcon } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@core/components/ui/collapsible"
+} from "@core/components/ui/collapsible";
 import {
   SidebarGroup,
   SidebarMenu,
@@ -17,25 +15,25 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   useSidebar,
-} from "@core/components/ui/sidebar"
+} from "@core/components/ui/sidebar";
 
 export function NavMain({
   items,
 }: {
   items: {
-    title: string
-    url: string
-    icon?: LucideIcon
-    isActive?: boolean
-    onClick?: () => void
+    title: string;
+    url: string;
+    icon?: LucideIcon;
+    isActive?: boolean;
+    onClick?: () => void;
     items?: {
-      title: string
-      url: string
-      onClick?: () => void
-    }[]
-  }[]
+      title: string;
+      url: string;
+      onClick?: () => void;
+    }[];
+  }[];
 }) {
-  const { state } = useSidebar()
+  const { state } = useSidebar();
 
   return (
     <SidebarGroup>
@@ -51,7 +49,7 @@ export function NavMain({
               >
                 <SidebarMenuItem>
                   <div className="flex items-center">
-                    <SidebarMenuButton 
+                    <SidebarMenuButton
                       tooltip={item.title}
                       asChild={!item.onClick}
                       onClick={item.onClick}
@@ -82,7 +80,7 @@ export function NavMain({
                       <SidebarMenuSub>
                         {item.items.map((subItem) => (
                           <SidebarMenuSubItem key={subItem.title}>
-                            <SidebarMenuSubButton 
+                            <SidebarMenuSubButton
                               asChild={!subItem.onClick}
                               onClick={subItem.onClick}
                             >
@@ -103,11 +101,11 @@ export function NavMain({
               </Collapsible>
             );
           }
-          
+
           return (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton 
-                tooltip={item.title} 
+              <SidebarMenuButton
+                tooltip={item.title}
                 asChild={!item.onClick}
                 onClick={item.onClick}
               >
@@ -128,5 +126,5 @@ export function NavMain({
         })}
       </SidebarMenu>
     </SidebarGroup>
-  )
+  );
 }
