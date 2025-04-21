@@ -26,10 +26,10 @@
 
     "baseUrl": ".",
     "paths": {
-      "@recommand": ["../recommand-framework/index.ts"],
-      "@recommand/*": ["../recommand-framework/*"],
+      "@recommand": ["../framework/index.ts"],
+      "@recommand/*": ["../framework/*"],
       "@core/*": ["*"],
-      "virtual:recommand-file-based-router": ["../recommand-framework/app/src/vite-env.d.ts"]
+      "virtual:recommand-file-based-router": ["../framework/app/src/vite-env.d.ts"]
     }
   }
 }
