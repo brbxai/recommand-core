@@ -1,0 +1,1 @@
+ALTER TABLE "completed_onboarding_steps" ALTER COLUMN "user_id" SET NOT NULL;

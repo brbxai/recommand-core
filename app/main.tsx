@@ -6,7 +6,6 @@ import './index.css'
 import { useMenuItemActions } from '@core/lib/menu-store';
 import { KeyRound, LogOut } from 'lucide-react';
 import { useUserStore } from '@core/lib/user-store';
-import { useUser } from '@core/hooks/use-user';
 
 const renderRoute = (r: typeof routes[number]) => {
     return (
@@ -47,6 +46,7 @@ export default function Main({ children }: { children: React.ReactNode }) {
                 }
             }
         });
+
     }, [logout]);
 
     return <BrowserRouter>
@@ -71,11 +71,16 @@ function getPublicPaths(routeTree: typeof routes[number][]) {
 }
 
 const RouterInner = () => {
-    const { user, isLoading } = useUser();
+    const { user, isLoading, fetchUser } = useUserStore();
     const location = useLocation();
     const navigate = useNavigate();
 
     const publicPaths = useMemo(() => getPublicPaths(routes), [routes]);
+
+    useEffect(() => {
+        // On mount, get the current user
+        fetchUser();
+    }, [])
 
     useEffect(() => {
         if (!isLoading && !user) {

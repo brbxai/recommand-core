@@ -10,6 +10,7 @@ import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { createTeam, getUserTeams } from "@core/data/teams";
 import { requireAuth } from "@core/lib/auth-middleware";
+import { getCompletedOnboardingSteps } from "@core/data/onboarding";
 
 const server = new Server();
 
@@ -109,7 +110,14 @@ const logout = server.post("/auth/logout", async (c) => {
 const me = server.get("/auth/me", requireAuth(), async (c) => {
   try {
     const user = await getCurrentUser(c);
-    return c.json(actionSuccess({ data: user }));
+    if (!user) {
+      return c.json(actionFailure("User not found"), 404);
+    }
+    const completedOnboardingSteps = await getCompletedOnboardingSteps(user.id);
+    return c.json(actionSuccess({ data: {
+      ...user,
+      completedOnboardingSteps,
+    } }));
   } catch (e) {
     console.error(e);
     return c.json(actionFailure("Internal server error"), 500);

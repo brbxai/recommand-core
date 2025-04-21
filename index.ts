@@ -5,6 +5,7 @@ import { db } from "@recommand/db";
 import { migrations } from "@recommand/db/schema";
 import auth from "api/auth";
 import apiKeys from "api/api-keys";
+import onboarding from "./api/onboarding";
 
 let logger: Logger;
 
@@ -25,5 +26,6 @@ server.get("/tasks", async (c) => {
 
 server.route("/", auth);
 server.route("/", apiKeys);
+server.route("/", onboarding);
 
 export default server;

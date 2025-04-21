@@ -4,9 +4,14 @@ import type { Auth } from "api/auth";
 import { stringifyActionFailure } from "@recommand/lib/utils";
 import type { UserWithoutPassword } from "data/users";
 import type { Team } from "@core/data/teams";
+import type { CompletedOnboardingStep } from "@core/data/onboarding";
+
+type MinimalCompletedOnboardingStep = Pick<CompletedOnboardingStep, "stepId" | "userId" | "teamId">;
 
 interface UserState {
   user: UserWithoutPassword | null;
+  completedOnboardingSteps: MinimalCompletedOnboardingStep[];
+  addCompletedOnboardingStep: (step: MinimalCompletedOnboardingStep) => void;
   isLoading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
@@ -23,8 +28,7 @@ interface UserState {
 }
 
 const client = rc<Auth>("core");
-
-function transformUserData(data: any): UserWithoutPassword & { teams?: Team[] } {
+function transformUserData(data: any): UserWithoutPassword & { teams?: Team[], completedOnboardingSteps: MinimalCompletedOnboardingStep[] } {
   return {
     ...data,
     resetTokenExpires: data.resetTokenExpires
@@ -36,11 +40,18 @@ function transformUserData(data: any): UserWithoutPassword & { teams?: Team[] } 
       ...team,
       createdAt: new Date(team.createdAt),
     })),
+    completedOnboardingSteps: data.completedOnboardingSteps,
   };
 }
 
 export const useUserStore = create<UserState>((set, get) => ({
   user: null,
+  completedOnboardingSteps: [],
+  addCompletedOnboardingStep: (step: MinimalCompletedOnboardingStep) => {
+    set((state) => ({
+      completedOnboardingSteps: [...state.completedOnboardingSteps, step],
+    }));
+  },
   isLoading: true,
   error: null,
   teams: [],
@@ -57,7 +68,8 @@ export const useUserStore = create<UserState>((set, get) => ({
             user: transformedUser, 
             teams: transformedUser.teams, 
             activeTeam: get().activeTeam || transformedUser.teams?.[0] || null,
-            isLoading: false 
+            isLoading: false,
+            completedOnboardingSteps: transformedUser.completedOnboardingSteps,
         });
       } else if (!userData.success) {
         set({

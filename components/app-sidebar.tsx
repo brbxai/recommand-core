@@ -14,13 +14,13 @@ import {
   SidebarRail,
 } from "@core/components/ui/sidebar";
 import { useLocation } from "react-router-dom";
-import { useUser } from "@core/hooks/use-user";
 import { ButtonLink } from "@core/components/ui/button";
+import { useUserStore } from "@core/lib/user-store";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const menuItems = useMenuItems();
   const location = useLocation();
-  const { user, teams, activeTeam, setActiveTeam } = useUser();
+  const { user, teams, activeTeam, setActiveTeam} = useUserStore();
 
   // Build the menu hierarchy for main items
   const mainItems = menuItems

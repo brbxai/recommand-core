@@ -68,3 +68,16 @@ export const apiKeys = pgTable("api_keys", {
 }, (table) => [
   index("api_keys_secret_hash_idx").using("hash", table.secretHash),
 ]);
+
+export const completedOnboardingSteps = pgTable("completed_onboarding_steps", {
+  userId: text("user_id").references(() => users.id).notNull(),
+  teamId: text("team_id").references(() => teams.id),
+  stepId: text("step_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { mode: "string" })
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => sql`now()`),
+}, (table) => [
+  primaryKey({ columns: [table.userId, table.teamId, table.stepId] })
+]);

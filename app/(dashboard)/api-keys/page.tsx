@@ -15,7 +15,7 @@ import { Input } from "@core/components/ui/input";
 import { toast } from "@core/components/ui/sonner";
 import { stringifyActionFailure } from "@recommand/lib/utils";
 import type { ApiKey } from "@core/data/api-keys";
-import { useUser } from "@core/hooks/use-user";
+import { useActiveTeam } from "@core/hooks/user";
 import { Trash2, Loader2, Copy } from "lucide-react";
 import { ColumnHeader } from "@core/components/data-table/column-header";
 
@@ -29,7 +29,7 @@ export default function Page() {
     null
   );
   const [sorting, setSorting] = useState<SortingState>([]);
-  const { activeTeam } = useUser();
+  const activeTeam = useActiveTeam();
 
   const fetchApiKeys = useCallback(async () => {
     if (!activeTeam?.id) {
