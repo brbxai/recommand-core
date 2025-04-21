@@ -14,7 +14,6 @@ import { TableContainer } from "../table-container";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   table: TanstackTable<TData>;
-  showSearch?: boolean;
 }
 
 export function DataTable<TData, TValue>({
