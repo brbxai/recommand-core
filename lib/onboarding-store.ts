@@ -57,9 +57,7 @@ export const useOnboardingActions = (): {
 
 export const useUncompletedOnboardingSteps = (): OnboardingStep[] => {
   const onboardingSteps = useOnboardingSteps();
-  const completedOnboardingSteps = useUserStore(
-    (x) => x.completedOnboardingSteps
-  );
+  const {completedOnboardingSteps, activeTeam} = useUserStore();
 
   return useMemo(() => {
     return onboardingSteps.filter(
@@ -70,12 +68,12 @@ export const useUncompletedOnboardingSteps = (): OnboardingStep[] => {
           }
 
           if (step.scope === "team") {
-            // For team steps, we need to check if the teamId is not null
-            return completedStep.teamId !== null;
+            // For team steps, we need to check if the teamId is not null and if it matches the active team
+            return completedStep.teamId !== null && completedStep.teamId === activeTeam?.id;
           }
 
           return true;
         })
     );
-  }, [onboardingSteps, completedOnboardingSteps]);
+  }, [onboardingSteps, completedOnboardingSteps, activeTeam]);
 };

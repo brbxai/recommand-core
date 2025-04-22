@@ -134,8 +134,34 @@ const teams = server.get("/auth/teams", requireAuth(), async (c) => {
   }
 });
 
+const createTeamEndpoint = server.post(
+  "/auth/teams",
+  requireAuth(),
+  zValidator(
+    "json",
+    z.object({
+      name: z.string().min(1, { message: "Team name is required" }),
+      teamDescription: z.string().optional(),
+    })
+  ),
+  async (c) => {
+    try {
+      const data = c.req.valid("json");
+      const user = c.var.user;
+      
+      const team = await createTeam(user.id, {
+        name: data.name,
+        teamDescription: data.teamDescription,
+      });
 
+      return c.json(actionSuccess({ data: team }));
+    } catch (e) {
+      console.error(e);
+      return c.json(actionFailure("Internal server error"), 500);
+    }
+  }
+);
 
-export type Auth = typeof login | typeof signup | typeof logout | typeof me | typeof teams;
+export type Auth = typeof login | typeof signup | typeof logout | typeof me | typeof teams | typeof createTeamEndpoint;
 
 export default server; 
