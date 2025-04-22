@@ -74,3 +74,4 @@ function ButtonLink({ className, variant, size, ...props }: ButtonLinkProps) {
 }
 
 export { Button, ButtonLink, buttonVariants };
+export type { ButtonProps };
