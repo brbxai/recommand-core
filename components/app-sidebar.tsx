@@ -5,7 +5,7 @@ import type { LucideIcon } from "lucide-react";
 import { NavMain } from "@core/components/nav-main";
 import { NavUser } from "@core/components/nav-user";
 import { TeamSwitcher } from "@core/components/team-switcher";
-import { useMenuItems } from "@core/lib/menu-store";
+import { useMenuGroups, useMenuItems, type MenuItem } from "@core/lib/menu-store";
 import {
   Sidebar,
   SidebarContent,
@@ -17,14 +17,9 @@ import { useLocation } from "react-router-dom";
 import { ButtonLink } from "@core/components/ui/button";
 import { useUserStore } from "@core/lib/user-store";
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const menuItems = useMenuItems();
-  const location = useLocation();
-  const { user, teams, activeTeam, setActiveTeam} = useUserStore();
-
-  // Build the menu hierarchy for main items
-  const mainItems = menuItems
-    .filter((item) => item.id.startsWith("main."))
+const buildMenuItems = (menuItems: MenuItem[], currentPath: string, prefix: string) => {
+  return menuItems
+    .filter((item) => item.id.startsWith(prefix))
     .reduce(
       (acc, item) => {
         const parts = item.id.split(".");
@@ -35,11 +30,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             url: item.href || "#",
             onClick: item.onClick,
             icon: item.icon as LucideIcon,
-            isActive: item.isActive || item.href === location.pathname,
+            isActive: item.isActive || item.href === currentPath,
             items: menuItems
               .filter(
                 (subItem) =>
-                  subItem.id.startsWith("main.") &&
+                  subItem.id.startsWith(prefix) &&
                   subItem.id.split(".").length > 2 &&
                   subItem.id.split(".").slice(0, -1).join(".") === item.id
               )
@@ -65,6 +60,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         }>;
       }>
     );
+};
+
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const menuItems = useMenuItems();
+  const menuGroups = useMenuGroups();
+  const location = useLocation();
+  const { user, teams, activeTeam, setActiveTeam} = useUserStore();
+
+  // Build the menu hierarchy for main items
+  const defaultItems = buildMenuItems(menuItems.filter((item) => !item.groupId), location.pathname, "main");
 
   // Group user menu items by their group (second part of the ID)
   const userMenuItems = menuItems
@@ -77,7 +82,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       }
       groups[group].push(item);
       return groups;
-    }, {} as Record<string, typeof menuItems>);
+    }, {} as Record<string, MenuItem[]>);
 
   // Group team menu items by their group (second part of the ID)
   const teamMenuItems = menuItems
@@ -97,9 +102,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     ? {
         name: user.email.split("@")[0], // Use part before @ as name
         email: user.email,
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(
-          user.email.split("@")[0]
-        )}&background=random`,
+        avatar: "",
       }
     : null;
 
@@ -114,7 +117,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={mainItems} />
+        <NavMain items={defaultItems} />
+        {menuGroups.map((group) => (
+          <NavMain key={group.id} label={group.title} items={buildMenuItems(menuItems.filter((item) => item.groupId === group.id), location.pathname, group.id)} />
+        ))}
       </SidebarContent>
       <SidebarFooter>
         {userData ? (
