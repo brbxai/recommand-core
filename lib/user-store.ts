@@ -6,7 +6,10 @@ import type { UserWithoutPassword } from "data/users";
 import type { Team } from "@core/data/teams";
 import type { CompletedOnboardingStep } from "@core/data/onboarding";
 
-type MinimalCompletedOnboardingStep = Pick<CompletedOnboardingStep, "stepId" | "userId" | "teamId">;
+type MinimalCompletedOnboardingStep = Pick<
+  CompletedOnboardingStep,
+  "stepId" | "userId" | "teamId"
+>;
 
 interface UserState {
   user: UserWithoutPassword | null;
@@ -15,7 +18,7 @@ interface UserState {
   isLoading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string) => Promise<any>;
   logout: () => Promise<void>;
   clearError: () => void;
   fetchUser: () => Promise<void>;
@@ -28,7 +31,10 @@ interface UserState {
 }
 
 const client = rc<Auth>("core");
-function transformUserData(data: any): UserWithoutPassword & { teams?: Team[], completedOnboardingSteps: MinimalCompletedOnboardingStep[] } {
+function transformUserData(data: any): UserWithoutPassword & {
+  teams?: Team[];
+  completedOnboardingSteps: MinimalCompletedOnboardingStep[];
+} {
   return {
     ...data,
     resetTokenExpires: data.resetTokenExpires
@@ -64,12 +70,12 @@ export const useUserStore = create<UserState>((set, get) => ({
       const userData = await userRes.json();
       if (userData.success && userData.data) {
         const transformedUser = transformUserData(userData.data);
-        set({ 
-            user: transformedUser, 
-            teams: transformedUser.teams, 
-            activeTeam: get().activeTeam || transformedUser.teams?.[0] || null,
-            isLoading: false,
-            completedOnboardingSteps: transformedUser.completedOnboardingSteps,
+        set({
+          user: transformedUser,
+          teams: transformedUser.teams,
+          activeTeam: get().activeTeam || transformedUser.teams?.[0] || null,
+          isLoading: false,
+          completedOnboardingSteps: transformedUser.completedOnboardingSteps,
         });
       } else if (!userData.success) {
         set({
@@ -123,8 +129,9 @@ export const useUserStore = create<UserState>((set, get) => ({
       const response = await res.json();
 
       if (response.success) {
-        // Use fetchUser to get user data after successful signup
-        await get().fetchUser();
+        // Don't fetch user data - they need to confirm email first
+        set({ isLoading: false });
+        return response; // Return the response so the form can show the message
       } else {
         set({
           error: stringifyActionFailure(response.errors),

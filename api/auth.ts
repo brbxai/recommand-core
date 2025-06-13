@@ -6,11 +6,15 @@ import { actionFailure, actionSuccess } from "@recommand/lib/utils";
 import { Server } from "@recommand/lib/api";
 import { db } from "@recommand/db";
 import { users } from "@core/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { createTeam, getUserTeams } from "@core/data/teams";
 import { requireAuth } from "@core/lib/auth-middleware";
 import { getCompletedOnboardingSteps } from "@core/data/onboarding";
+import { sendEmail } from "@core/lib/email";
+import { PasswordResetEmail } from "@core/emails/password-reset-email";
+import { SignupEmailConfirmation } from "@core/emails/signup-confirmation";
+import { ulid } from "ulid";
 
 const server = new Server();
 
@@ -33,6 +37,7 @@ const login = server.post(
           id: users.id,
           isAdmin: users.isAdmin,
           password: users.passwordHash,
+          emailVerified: users.emailVerified,
         })
         .from(users)
         .where(eq(users.email, data.email));
@@ -45,6 +50,14 @@ const login = server.post(
       const passwordMatch = await bcrypt.compare(data.password, user.password);
       if (!passwordMatch) {
         return c.json(actionFailure("Incorrect password"), 401);
+      }
+
+      // Check if email is verified
+      if (!user.emailVerified) {
+        return c.json(
+          actionFailure("Please confirm your email address before logging in"),
+          401
+        );
       }
 
       // Create session
@@ -73,18 +86,38 @@ const signup = server.post(
     try {
       const data = c.req.valid("json");
 
-      // Create user
+      // Create user with email verification token
       const user = await createUser(data);
 
-      // Create default team
-      await createTeam(user.id, {
-        name: "My Team",
+      // Generate email verification token
+      const verificationToken = ulid();
+
+      // Update user with verification token and expiration (24 hours from now)
+      await db
+        .update(users)
+        .set({
+          emailVerificationToken: verificationToken,
+          emailVerificationExpires: sql`CURRENT_TIMESTAMP + INTERVAL '24 hours'`,
+        })
+        .where(eq(users.id, user.id));
+
+      // Send confirmation email
+      const confirmationUrl = `${process.env.BASE_URL}/email-confirmation/${verificationToken}`;
+      await sendEmail({
+        to: data.email,
+        subject: "Confirm your email address",
+        email: SignupEmailConfirmation({
+          firstName: "there", // Since we don't have firstName in the schema
+          confirmationUrl,
+        }),
       });
 
-      // Create session
-      await createSession(c, user);
-
-      return c.json(actionSuccess());
+      return c.json(
+        actionSuccess({
+          message:
+            "Account created successfully. Please check your email to confirm your account.",
+        })
+      );
     } catch (e) {
       console.error(e);
 
@@ -114,10 +147,14 @@ const me = server.get("/auth/me", requireAuth(), async (c) => {
       return c.json(actionFailure("User not found"), 404);
     }
     const completedOnboardingSteps = await getCompletedOnboardingSteps(user.id);
-    return c.json(actionSuccess({ data: {
-      ...user,
-      completedOnboardingSteps,
-    } }));
+    return c.json(
+      actionSuccess({
+        data: {
+          ...user,
+          completedOnboardingSteps,
+        },
+      })
+    );
   } catch (e) {
     console.error(e);
     return c.json(actionFailure("Internal server error"), 500);
@@ -148,7 +185,7 @@ const createTeamEndpoint = server.post(
     try {
       const data = c.req.valid("json");
       const user = c.var.user;
-      
+
       const team = await createTeam(user.id, {
         name: data.name,
         teamDescription: data.teamDescription,
@@ -162,6 +199,264 @@ const createTeamEndpoint = server.post(
   }
 );
 
-export type Auth = typeof login | typeof signup | typeof logout | typeof me | typeof teams | typeof createTeamEndpoint;
+const requestPasswordReset = server.post(
+  "/auth/request-password-reset",
+  zValidator(
+    "json",
+    z.object({
+      email: z.string().email(),
+    })
+  ),
+  async (c) => {
+    try {
+      const { email } = c.req.valid("json");
 
-export default server; 
+      // Find user
+      const matchingUsers = await db
+        .select({
+          id: users.id,
+          email: users.email,
+        })
+        .from(users)
+        .where(eq(users.email, email));
+
+      const user = matchingUsers[0];
+      if (!user) {
+        // Don't reveal if user exists or not
+        return c.json(actionSuccess());
+      }
+
+      // Generate reset token
+      const resetToken = ulid();
+
+      // Store reset token in database with expiration (1 hour from now)
+      await db
+        .update(users)
+        .set({
+          resetToken,
+          resetTokenExpires: sql`CURRENT_TIMESTAMP + INTERVAL '1 hour'`,
+        })
+        .where(eq(users.id, user.id));
+
+      // Send reset email
+      const resetLink = `${process.env.BASE_URL}/reset-password/${resetToken}`;
+      await sendEmail({
+        to: email,
+        subject: "Reset your Recommand password",
+        email: PasswordResetEmail({
+          firstName: "there", // Since we don't have firstName in the schema
+          resetPasswordLink: resetLink,
+        }),
+      });
+
+      return c.json(actionSuccess());
+    } catch (e) {
+      console.error(e);
+      return c.json(actionFailure("Internal server error"), 500);
+    }
+  }
+);
+
+const confirmEmail = server.post(
+  "/auth/confirm-email",
+  zValidator(
+    "json",
+    z.object({
+      token: z.string(),
+    })
+  ),
+  async (c) => {
+    try {
+      const { token } = c.req.valid("json");
+
+      // Find user with valid email verification token
+      const matchingUsers = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          emailVerified: users.emailVerified,
+        })
+        .from(users)
+        .where(
+          sql`${users.emailVerificationToken} = ${token} AND ${users.emailVerificationExpires} > CURRENT_TIMESTAMP`
+        );
+
+      const user = matchingUsers[0];
+      if (!user) {
+        return c.json(
+          actionFailure("Invalid or expired confirmation token"),
+          400
+        );
+      }
+
+      if (user.emailVerified) {
+        return c.json(actionFailure("Email already verified"), 400);
+      }
+
+      // Mark email as verified and clear verification token
+      await db
+        .update(users)
+        .set({
+          emailVerified: true,
+          emailVerificationToken: null,
+          emailVerificationExpires: null,
+        })
+        .where(eq(users.id, user.id));
+
+      // Create default team after email verification
+      await createTeam(user.id, {
+        name: "My Team",
+      });
+
+      // Create session for the user
+      await createSession(c, { id: user.id, isAdmin: false });
+
+      return c.json(
+        actionSuccess({
+          message: "Email confirmed successfully. You are now logged in.",
+        })
+      );
+    } catch (e) {
+      console.error(e);
+      return c.json(actionFailure("Internal server error"), 500);
+    }
+  }
+);
+
+const resendConfirmationEmail = server.post(
+  "/auth/resend-confirmation",
+  zValidator(
+    "json",
+    z.object({
+      email: z.string().email(),
+    })
+  ),
+  async (c) => {
+    try {
+      const { email } = c.req.valid("json");
+
+      // Find user
+      const matchingUsers = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          emailVerified: users.emailVerified,
+        })
+        .from(users)
+        .where(eq(users.email, email));
+
+      const user = matchingUsers[0];
+      if (!user) {
+        // Don't reveal if user exists or not
+        return c.json(
+          actionSuccess({
+            message:
+              "If an account with that email exists and is not verified, a confirmation email has been sent.",
+          })
+        );
+      }
+
+      if (user.emailVerified) {
+        return c.json(actionFailure("Email is already verified"), 400);
+      }
+
+      // Generate new verification token
+      const verificationToken = ulid();
+
+      // Update user with new verification token and expiration (24 hours from now)
+      await db
+        .update(users)
+        .set({
+          emailVerificationToken: verificationToken,
+          emailVerificationExpires: sql`CURRENT_TIMESTAMP + INTERVAL '24 hours'`,
+        })
+        .where(eq(users.id, user.id));
+
+      // Send confirmation email
+      const confirmationUrl = `${process.env.BASE_URL}/email-confirmation/${verificationToken}`;
+      await sendEmail({
+        to: email,
+        subject: "Confirm your email address",
+        email: SignupEmailConfirmation({
+          firstName: "there", // Since we don't have firstName in the schema
+          confirmationUrl,
+        }),
+      });
+
+      return c.json(
+        actionSuccess({
+          message:
+            "If an account with that email exists and is not verified, a confirmation email has been sent.",
+        })
+      );
+    } catch (e) {
+      console.error(e);
+      return c.json(actionFailure("Internal server error"), 500);
+    }
+  }
+);
+
+const resetPassword = server.post(
+  "/auth/reset-password",
+  zValidator(
+    "json",
+    z.object({
+      token: z.string(),
+      password: z
+        .string()
+        .min(8, { message: "Password must be at least 8 characters" }),
+    })
+  ),
+  async (c) => {
+    try {
+      const { token, password } = c.req.valid("json");
+
+      // Find user with valid reset token
+      const matchingUsers = await db
+        .select({
+          id: users.id,
+        })
+        .from(users)
+        .where(
+          sql`${users.resetToken} = ${token} AND ${users.resetTokenExpires} > CURRENT_TIMESTAMP`
+        );
+
+      const user = matchingUsers[0];
+      if (!user) {
+        return c.json(actionFailure("Invalid or expired reset token"), 400);
+      }
+
+      // Hash new password
+      const passwordHash = await bcrypt.hash(password, 10);
+
+      // Update password and clear reset token
+      await db
+        .update(users)
+        .set({
+          passwordHash,
+          resetToken: null,
+          resetTokenExpires: null,
+        })
+        .where(eq(users.id, user.id));
+
+      return c.json(actionSuccess());
+    } catch (e) {
+      console.error(e);
+      return c.json(actionFailure("Internal server error"), 500);
+    }
+  }
+);
+
+export type Auth =
+  | typeof login
+  | typeof signup
+  | typeof logout
+  | typeof me
+  | typeof teams
+  | typeof createTeamEndpoint
+  | typeof requestPasswordReset
+  | typeof resetPassword
+  | typeof confirmEmail
+  | typeof resendConfirmationEmail;
+
+export default server;

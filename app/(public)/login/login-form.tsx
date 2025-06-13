@@ -31,7 +31,10 @@ export function LoginForm({
       navigate("/");
     } catch (error) {
       toast.error("Login failed", {
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        description:
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred",
       });
     }
   };
@@ -58,26 +61,30 @@ export function LoginForm({
                   required
                   tabIndex={1}
                   value={email}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setEmail(e.target.value)
+                  }
                 />
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
                   <a
-                    href="/forgot-password"
+                    href="/reset-password"
                     className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                     tabIndex={5}
                   >
                     Forgot your password?
                   </a>
                 </div>
-                <PasswordInput 
-                  name="password" 
-                  required 
+                <PasswordInput
+                  name="password"
+                  required
                   tabIndex={2}
                   value={password}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setPassword(e.target.value)
+                  }
                 />
               </div>
               <Button type="submit" className="w-full" tabIndex={3}>
