@@ -32,7 +32,7 @@ export const PasswordResetEmail = ({
           className={`mx-auto my-8 max-w-xl border bg-[${SHEET}] p-6 border-[${SHADOW}] border-solid`}
         >
           <Img
-            src={`${process.env.BASE_URL}/logo.svg`}
+            src={`${process.env.BASE_URL}/icon.svg`}
             alt="Recommand Logo"
             className="mx-auto mb-6 w-16"
           />

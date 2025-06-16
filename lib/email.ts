@@ -19,7 +19,7 @@ export async function sendEmail({ to, subject, email, replyTo }: EmailOptions) {
   const emailHtml = await render(email);
 
   const options = {
-    From: process.env.EMAIL_FROM || "no-reply@recommand.eu",
+    From: process.env.EMAIL_FROM || "support@recommand.eu",
     To: to,
     Subject: subject,
     HtmlBody: emailHtml,

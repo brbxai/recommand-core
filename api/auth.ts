@@ -14,7 +14,7 @@ import { getCompletedOnboardingSteps } from "@core/data/onboarding";
 import { sendEmail } from "@core/lib/email";
 import { PasswordResetEmail } from "@core/emails/password-reset-email";
 import { SignupEmailConfirmation } from "@core/emails/signup-confirmation";
-import { ulid } from "ulid";
+import { generateSecureToken } from "@core/lib/utils";
 
 const server = new Server();
 
@@ -90,7 +90,7 @@ const signup = server.post(
       const user = await createUser(data);
 
       // Generate email verification token
-      const verificationToken = ulid();
+      const verificationToken = generateSecureToken();
 
       // Update user with verification token and expiration (24 hours from now)
       await db
@@ -227,7 +227,7 @@ const requestPasswordReset = server.post(
       }
 
       // Generate reset token
-      const resetToken = ulid();
+      const resetToken = generateSecureToken();
 
       // Store reset token in database with expiration (1 hour from now)
       await db
@@ -361,7 +361,7 @@ const resendConfirmationEmail = server.post(
       }
 
       // Generate new verification token
-      const verificationToken = ulid();
+      const verificationToken = generateSecureToken();
 
       // Update user with new verification token and expiration (24 hours from now)
       await db
