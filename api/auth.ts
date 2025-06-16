@@ -14,9 +14,14 @@ import { getCompletedOnboardingSteps } from "@core/data/onboarding";
 import { sendEmail } from "@core/lib/email";
 import { PasswordResetEmail } from "@core/emails/password-reset-email";
 import { SignupEmailConfirmation } from "@core/emails/signup-confirmation";
-import { generateSecureToken } from "@core/lib/utils";
+import { randomBytes } from "crypto";
 
 const server = new Server();
+
+// Generate cryptographically secure random token
+function generateSecureToken(): string {
+  return randomBytes(32).toString("hex"); // 64 character hex string
+}
 
 const login = server.post(
   "/auth/login",
