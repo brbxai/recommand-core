@@ -31,7 +31,7 @@ export const SignupEmailConfirmation = ({
           className={`mx-auto my-8 max-w-xl border bg-[${SHEET}] p-6 border-[${SHADOW}] border-solid`}
         >
           <Img
-            src={`${process.env.BASE_URL}/icon.svg`}
+            src={`${process.env.BASE_URL}/icon.png`}
             alt="Recommand Logo"
             className="mx-auto mb-6 w-16"
           />
