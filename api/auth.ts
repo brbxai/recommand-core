@@ -15,6 +15,7 @@ import { sendEmail } from "@core/lib/email";
 import { PasswordResetEmail } from "@core/emails/password-reset-email";
 import { SignupEmailConfirmation } from "@core/emails/signup-confirmation";
 import { randomBytes } from "crypto";
+import { describeRoute } from "hono-openapi";
 
 const server = new Server();
 
@@ -452,6 +453,80 @@ const resetPassword = server.post(
   }
 );
 
+const verify = server.get(
+  "/auth/verify",
+  requireAuth(),
+  describeRoute({
+    operationId: "verifyAuth",
+    description: "Verify if the user is authenticated",
+    summary: "Verify Authentication",
+    tags: ["Authentication"],
+    responses: {
+      200: {
+        description: "User is authenticated",
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                success: { type: "boolean", example: true },
+              },
+            },
+          },
+        },
+      },
+      401: {
+        description: "User is not authenticated",
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                success: { type: "boolean", example: false },
+                errors: {
+                  type: "object",
+                  additionalProperties: {
+                    type: "array",
+                    items: { type: "string" },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                success: { type: "boolean", example: false },
+                errors: {
+                  type: "object",
+                  additionalProperties: {
+                    type: "array",
+                    items: { type: "string" },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  }),
+  async (c) => {
+    try {
+      return c.json(actionSuccess());
+    } catch (e) {
+      console.error(e);
+      return c.json(actionFailure("Internal server error"), 500);
+    }
+  }
+);
+
 export type Auth =
   | typeof login
   | typeof signup
@@ -462,6 +537,7 @@ export type Auth =
   | typeof requestPasswordReset
   | typeof resetPassword
   | typeof confirmEmail
-  | typeof resendConfirmationEmail;
+  | typeof resendConfirmationEmail
+  | typeof verify;
 
 export default server;
