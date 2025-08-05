@@ -1,7 +1,7 @@
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { createUser, getCurrentUser } from "data/users";
-import { createSession, deleteSession } from "lib/session";
+import { createUser, getCurrentUser } from "@core/data/users";
+import { createSession, deleteSession } from "@core/lib/session";
 import { actionFailure, actionSuccess } from "@recommand/lib/utils";
 import { Server } from "@recommand/lib/api";
 import { db } from "@recommand/db";
@@ -177,16 +177,20 @@ const teams = server.get("/auth/teams", requireAuth(), async (c) => {
   }
 });
 
-const teamMembers = server.get("/auth/teams/:teamId/members", requireAuth(), async (c) => {
-  try {
-    const teamId = c.req.param("teamId");
-    const members = await getTeamMembers(teamId);
-    return c.json(actionSuccess({ data: members }));
-  } catch (e) {
-    console.error(e);
-    return c.json(actionFailure("Internal server error"), 500);
+const teamMembers = server.get(
+  "/auth/teams/:teamId/members",
+  requireAuth(),
+  async (c) => {
+    try {
+      const teamId = c.req.param("teamId");
+      const members = await getTeamMembers(teamId);
+      return c.json(actionSuccess({ data: members }));
+    } catch (e) {
+      console.error(e);
+      return c.json(actionFailure("Internal server error"), 500);
+    }
   }
-});
+);
 
 const createTeamEndpoint = server.post(
   "/auth/teams",

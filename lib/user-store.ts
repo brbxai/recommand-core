@@ -1,8 +1,8 @@
 import { create } from "zustand";
 import { rc } from "@recommand/lib/client";
-import type { Auth } from "api/auth";
+import type { Auth } from "@core/api/auth";
 import { stringifyActionFailure } from "@recommand/lib/utils";
-import type { UserWithoutPassword } from "data/users";
+import type { UserWithoutPassword } from "@core/data/users";
 import type { Team } from "@core/data/teams";
 import type { CompletedOnboardingStep } from "@core/data/onboarding";
 
