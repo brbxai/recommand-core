@@ -8,7 +8,7 @@ import { db } from "@recommand/db";
 import { users } from "@core/db/schema";
 import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
-import { createTeam, getUserTeams } from "@core/data/teams";
+import { createTeam, getUserTeams, getTeamMembers } from "@core/data/teams";
 import { requireAuth } from "@core/lib/auth-middleware";
 import { getCompletedOnboardingSteps } from "@core/data/onboarding";
 import { sendEmail } from "@core/lib/email";
@@ -170,6 +170,17 @@ const teams = server.get("/auth/teams", requireAuth(), async (c) => {
   try {
     const teams = await getUserTeams(c.var.user.id);
     return c.json(actionSuccess({ data: teams }));
+  } catch (e) {
+    console.error(e);
+    return c.json(actionFailure("Internal server error"), 500);
+  }
+});
+
+const teamMembers = server.get("/auth/teams/:teamId/members", requireAuth(), async (c) => {
+  try {
+    const teamId = c.req.param("teamId");
+    const members = await getTeamMembers(teamId);
+    return c.json(actionSuccess({ data: members }));
   } catch (e) {
     console.error(e);
     return c.json(actionFailure("Internal server error"), 500);
@@ -458,6 +469,7 @@ export type Auth =
   | typeof logout
   | typeof me
   | typeof teams
+  | typeof teamMembers
   | typeof createTeamEndpoint
   | typeof requestPasswordReset
   | typeof resetPassword

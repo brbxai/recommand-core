@@ -1,4 +1,4 @@
-import { teamMembers, teams } from "@core/db/schema";
+import { teamMembers, teams, users } from "@core/db/schema";
 import { db } from "@recommand/db";
 import { and, count, eq } from "drizzle-orm";
 
@@ -39,3 +39,19 @@ export async function isMember(userId: string, teamId: string) {
     .where(and(eq(teamMembers.userId, userId), eq(teamMembers.teamId, teamId)));
   return cnt > 0;
 }
+
+export async function getTeamMembers(teamId: string) {
+  const members = await db
+    .select({
+      id: users.id,
+      email: users.email,
+      isAdmin: users.isAdmin,
+      createdAt: users.createdAt,
+    })
+    .from(users)
+    .innerJoin(teamMembers, eq(users.id, teamMembers.userId))
+    .where(eq(teamMembers.teamId, teamId));
+  return members;
+}
+
+export type TeamMember = Awaited<ReturnType<typeof getTeamMembers>>[0];
