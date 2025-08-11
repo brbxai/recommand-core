@@ -27,7 +27,7 @@ interface UserState {
   teamsAreLoaded: boolean;
   fetchTeams: () => Promise<void>;
   activeTeam: Team | null;
-  setActiveTeam: (team: Team) => void;
+  setActiveTeam: (team: Team | string) => void;
 }
 
 const client = rc<Auth>("core");
@@ -201,7 +201,12 @@ export const useUserStore = create<UserState>((set, get) => ({
     }
   },
 
-  setActiveTeam: (team: Team) => {
-    set({ activeTeam: team });
+  setActiveTeam: (team: Team | string) => {
+    if (typeof team === "string") {
+      const foundTeam = get().teams.find((t) => t.id === team);
+      set({ activeTeam: foundTeam || null });
+    } else {
+      set({ activeTeam: team });
+    }
   },
 }));
