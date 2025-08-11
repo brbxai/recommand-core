@@ -1,11 +1,12 @@
 import { ChevronsUpDown, Plus, GalleryVerticalEnd } from "lucide-react";
+import { Link } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@core/components/ui/dropdown-menu";
 import {
@@ -25,6 +26,7 @@ import { toast } from "@core/components/ui/sonner";
 import { rc } from "@recommand/lib/client";
 import { stringifyActionFailure } from "@recommand/lib/utils";
 import type { Auth } from "@core/api/auth";
+import type { MenuItem } from "@core/lib/menu-store";
 
 const client = rc<Auth>("core");
 
@@ -32,10 +34,12 @@ export function TeamSwitcher({
   teams,
   activeTeam,
   setActiveTeam,
+  menuItems,
 }: {
   teams: Team[];
   activeTeam: Team | null;
   setActiveTeam: (team: Team) => void;
+  menuItems: Record<string, MenuItem[]>;
 }) {
   const { isMobile } = useSidebar();
   const [isCreateTeamDialogOpen, setIsCreateTeamDialogOpen] = useState(false);
@@ -166,8 +170,49 @@ export function TeamSwitcher({
                 <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
                   <Plus className="size-4" />
                 </div>
-                <div className="text-muted-foreground font-medium">Add team</div>
+                <div>Add team</div>
               </DropdownMenuItem>
+              {menuItems && Object.entries(menuItems).map(([group, items]) => (
+                <DropdownMenuGroup key={group}>
+                  {items.map((item) => {
+                    if (item.href && !item.onClick) {
+                      // Render as a link
+                      return (
+                        <DropdownMenuItem
+                          key={item.id}
+                          asChild
+                          className="gap-2 p-2"
+                        >
+                          <Link to={item.href}>
+                            {item.icon && (
+                              <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
+                                <item.icon className="size-4" />
+                              </div>
+                            )}
+                            <span>{item.title}</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      );
+                    } else {
+                      // Render as a button with onClick
+                      return (
+                        <DropdownMenuItem
+                          key={item.id}
+                          onClick={item.onClick}
+                          className="gap-2 p-2"
+                        >
+                          {item.icon && (
+                            <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
+                              <item.icon className="size-4" />
+                            </div>
+                          )}
+                          <span>{item.title}</span>
+                        </DropdownMenuItem>
+                      );
+                    }
+                  })}
+                </DropdownMenuGroup>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
         </SidebarMenuItem>
@@ -200,7 +245,7 @@ export function TeamSwitcher({
             <Button variant="outline" onClick={() => setIsCreateTeamDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleCreateTeam} disabled={isCreating}>
+            <Button onClick={handleCreateTeam} disabled={isCreating || !newTeamName.trim()}>
               {isCreating ? "Creating..." : "Create team"}
             </Button>
           </DialogFooter>

@@ -79,6 +79,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       return groups;
     }, {} as Record<string, typeof menuItems>);
 
+  // Group team menu items by their group (second part of the ID)
+  const teamMenuItems = menuItems
+    .filter((item) => item.id.startsWith("team."))
+    .reduce((groups, item) => {
+      const parts = item.id.split(".");
+      const group = parts.length > 2 ? parts[1] : "default";
+      if (!groups[group]) {
+        groups[group] = [];
+      }
+      groups[group].push(item);
+      return groups;
+    }, {} as Record<string, typeof menuItems>);
+
   // Transform user data for NavUser component
   const userData = user
     ? {
@@ -97,6 +110,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           teams={teams}
           activeTeam={activeTeam}
           setActiveTeam={setActiveTeam}
+          menuItems={teamMenuItems}
         />
       </SidebarHeader>
       <SidebarContent>
