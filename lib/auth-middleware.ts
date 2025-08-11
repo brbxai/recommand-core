@@ -11,6 +11,10 @@ export type AuthenticatedUserContext = {
       isAdmin: boolean;
     };
     team: Team | undefined;
+    apiKey?: {
+      id: string;
+      teamId: string;
+    };
   };
 };
 
@@ -77,8 +81,17 @@ export function requireTeamAccess(options: TeamAccessOptions = {}) {
         return c.json(actionFailure("Team ID is required"), 400);
       }
 
-      if (!(await isMember(user.id, teamId))) {
-        return c.json(actionFailure("Unauthorized"), 401);
+      const apiKey = c.get("apiKey");
+      if (apiKey) {
+        // If the user is authenticated via an API key, ensure the API key belongs to the team
+        if (apiKey.teamId !== teamId) {
+          return c.json(actionFailure("Unauthorized"), 401);
+        }
+      } else {
+        // If the user is not authenticated via an API key, ensure they are a member of the team
+        if (!(await isMember(user.id, teamId))) {
+          return c.json(actionFailure("Unauthorized"), 401);
+        }
       }
 
       const team = await getTeam(teamId);

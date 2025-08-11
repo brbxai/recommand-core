@@ -48,8 +48,8 @@ const _createApiKey = server.post(
   async (c) => {
     try {
       const apiKey = await createApiKey(
-        c.var.user.id,
-        c.var.team.id,
+        c.get("user").id,
+        c.get("team").id,
         c.req.valid("json").name
       );
       return c.json(actionSuccess({ apiKey }));

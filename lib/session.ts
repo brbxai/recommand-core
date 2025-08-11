@@ -6,7 +6,7 @@ import {
   setSignedCookie,
   deleteCookie,
 } from "@recommand/lib/api/cookie";
-import { checkApiKey } from "@core/data/api-keys";
+import { checkApiKey, type ApiKey } from "@core/data/api-keys";
 
 if (!process.env.JWT_SECRET) {
   console.warn("JWT_SECRET is not set");
@@ -64,8 +64,9 @@ export async function createSession(
 export async function verifySession(c: Context): Promise<{
   userId: string;
   isAdmin: boolean;
+  apiKey?: ApiKey;
 } | null> {
-  let result: { userId: string; isAdmin: boolean } | null = null;
+  let result: { userId: string; isAdmin: boolean; apiKey?: ApiKey } | null = null;
 
   const sessionCookie = await getSignedCookie(
     c,
@@ -81,6 +82,7 @@ export async function verifySession(c: Context): Promise<{
     result = {
       userId: session.userId as string,
       isAdmin: session.isAdmin as boolean,
+      apiKey: undefined,
     };
   } else {
     // We will try api keys next (Basic token auth)
@@ -92,7 +94,7 @@ export async function verifySession(c: Context): Promise<{
       const [apiKeyId, secret] = credentials.split(":");
       const apiKey = await checkApiKey(apiKeyId, secret);
       if (apiKey) {
-        result = { userId: apiKey.user.id, isAdmin: apiKey.user.isAdmin };
+        result = { userId: apiKey.user.id, isAdmin: apiKey.user.isAdmin, apiKey: apiKey.apiKey };
       }
     }
   }
@@ -104,6 +106,14 @@ export async function verifySession(c: Context): Promise<{
     id: result.userId as string,
     isAdmin: result.isAdmin as boolean,
   });
+
+  // Add api key to context
+  if (result.apiKey) {
+    c.set("apiKey", {
+      id: result.apiKey.id,
+      teamId: result.apiKey.teamId,
+    });
+  }
 
   return result;
 }
