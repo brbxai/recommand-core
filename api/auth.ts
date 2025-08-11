@@ -169,7 +169,7 @@ const me = server.get("/auth/me", requireAuth(), async (c) => {
 
 const teams = server.get("/auth/teams", requireAuth(), async (c) => {
   try {
-    const teams = await getUserTeams(c.var.user.id);
+    const teams = await getUserTeams(c.get("user").id);
     return c.json(actionSuccess({ data: teams }));
   } catch (e) {
     console.error(e);
@@ -205,7 +205,7 @@ const createTeamEndpoint = server.post(
   async (c) => {
     try {
       const data = c.req.valid("json");
-      const user = c.var.user;
+      const user = c.get("user");
 
       const team = await createTeam(user.id, {
         name: data.name,
