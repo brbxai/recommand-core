@@ -1,14 +1,14 @@
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { createUser, getCurrentUser } from "data/users";
-import { createSession, deleteSession } from "lib/session";
+import { createUser, getCurrentUser } from "@core/data/users";
+import { createSession, deleteSession } from "@core/lib/session";
 import { actionFailure, actionSuccess } from "@recommand/lib/utils";
 import { Server } from "@recommand/lib/api";
 import { db } from "@recommand/db";
 import { users } from "@core/db/schema";
 import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
-import { createTeam, getUserTeams } from "@core/data/teams";
+import { createTeam, getUserTeams, getTeamMembers } from "@core/data/teams";
 import { requireAuth } from "@core/lib/auth-middleware";
 import { getCompletedOnboardingSteps } from "@core/data/onboarding";
 import { sendEmail } from "@core/lib/email";
@@ -176,6 +176,21 @@ const teams = server.get("/auth/teams", requireAuth(), async (c) => {
     return c.json(actionFailure("Internal server error"), 500);
   }
 });
+
+const teamMembers = server.get(
+  "/auth/teams/:teamId/members",
+  requireAuth(),
+  async (c) => {
+    try {
+      const teamId = c.req.param("teamId");
+      const members = await getTeamMembers(teamId);
+      return c.json(actionSuccess({ data: members }));
+    } catch (e) {
+      console.error(e);
+      return c.json(actionFailure("Internal server error"), 500);
+    }
+  }
+);
 
 const createTeamEndpoint = server.post(
   "/auth/teams",
@@ -533,6 +548,7 @@ export type Auth =
   | typeof logout
   | typeof me
   | typeof teams
+  | typeof teamMembers
   | typeof createTeamEndpoint
   | typeof requestPasswordReset
   | typeof resetPassword
