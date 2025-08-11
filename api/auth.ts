@@ -9,7 +9,7 @@ import { users } from "@core/db/schema";
 import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { createTeam, getUserTeams, getTeamMembers } from "@core/data/teams";
-import { requireAuth } from "@core/lib/auth-middleware";
+import { requireAuth, requireTeamAccess } from "@core/lib/auth-middleware";
 import { getCompletedOnboardingSteps } from "@core/data/onboarding";
 import { sendEmail } from "@core/lib/email";
 import { PasswordResetEmail } from "@core/emails/password-reset-email";
@@ -179,10 +179,10 @@ const teams = server.get("/auth/teams", requireAuth(), async (c) => {
 
 const teamMembers = server.get(
   "/auth/teams/:teamId/members",
-  requireAuth(),
+  requireTeamAccess(),
   async (c) => {
     try {
-      const teamId = c.req.param("teamId");
+      const teamId = c.get("team").id;
       const members = await getTeamMembers(teamId);
       return c.json(actionSuccess({ data: members }));
     } catch (e) {
