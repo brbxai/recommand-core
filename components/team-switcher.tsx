@@ -66,6 +66,7 @@ export function TeamSwitcher({
         const newTeam = {
           ...json.data,
           createdAt: new Date(json.data.createdAt),
+          updatedAt: new Date(json.data.updatedAt),
         };
         await fetchTeams();
         setActiveTeam(newTeam);
