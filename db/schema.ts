@@ -8,6 +8,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { ulid } from "ulid";
 import { sql } from "drizzle-orm";
+import { autoUpdateTimestamp } from "@recommand/db/custom-types";
 
 export const users = pgTable("users", {
   id: text("id")
@@ -22,10 +23,7 @@ export const users = pgTable("users", {
   resetTokenExpires: timestamp("reset_token_expires"),
   isAdmin: boolean("is_admin").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { mode: "string" })
-    .defaultNow()
-    .notNull()
-    .$onUpdate(() => sql`now()`),
+  updatedAt: autoUpdateTimestamp(),
 });
 
 export const teams = pgTable("teams", {
@@ -35,10 +33,7 @@ export const teams = pgTable("teams", {
   name: text("name").notNull(),
   teamDescription: text("team_description").notNull().default("Developer"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { mode: "string" })
-    .defaultNow()
-    .notNull()
-    .$onUpdate(() => sql`now()`),
+  updatedAt: autoUpdateTimestamp(),
 });
 
 export const teamMembers = pgTable(
@@ -47,10 +42,7 @@ export const teamMembers = pgTable(
     teamId: text("team_id").references(() => teams.id),
     userId: text("user_id").references(() => users.id),
     createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { mode: "string" })
-      .defaultNow()
-      .notNull()
-      .$onUpdate(() => sql`now()`),
+    updatedAt: autoUpdateTimestamp(),
   },
   (table) => [primaryKey({ columns: [table.teamId, table.userId] })]
 );
@@ -70,10 +62,7 @@ export const apiKeys = pgTable(
       .notNull(),
     secretHash: text("secret_hash").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { mode: "string" })
-      .defaultNow()
-      .notNull()
-      .$onUpdate(() => sql`now()`),
+    updatedAt: autoUpdateTimestamp(),
   },
   (table) => [index("api_keys_secret_hash_idx").using("hash", table.secretHash)]
 );
@@ -87,10 +76,7 @@ export const completedOnboardingSteps = pgTable(
     teamId: text("team_id").references(() => teams.id),
     stepId: text("step_id").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { mode: "string" })
-      .defaultNow()
-      .notNull()
-      .$onUpdate(() => sql`now()`),
+    updatedAt: autoUpdateTimestamp(),
   },
   (table) => [
     primaryKey({ columns: [table.userId, table.teamId, table.stepId] }),
