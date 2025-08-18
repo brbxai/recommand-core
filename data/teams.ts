@@ -54,4 +54,16 @@ export async function getTeamMembers(teamId: string) {
   return members;
 }
 
+export async function updateTeam(
+  teamId: string,
+  updates: Partial<Pick<typeof teams.$inferInsert, 'name' | 'teamDescription'>>
+) {
+  const [updatedTeam] = await db
+    .update(teams)
+    .set(updates)
+    .where(eq(teams.id, teamId))
+    .returning();
+  return updatedTeam;
+}
+
 export type TeamMember = Awaited<ReturnType<typeof getTeamMembers>>[0];

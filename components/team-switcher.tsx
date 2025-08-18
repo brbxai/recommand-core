@@ -1,4 +1,4 @@
-import { ChevronsUpDown, Plus, GalleryVerticalEnd } from "lucide-react";
+import { ChevronsUpDown, Plus, GalleryVerticalEnd, Pencil } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   DropdownMenu,
@@ -45,6 +45,10 @@ export function TeamSwitcher({
   const [isCreateTeamDialogOpen, setIsCreateTeamDialogOpen] = useState(false);
   const [newTeamName, setNewTeamName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [isEditTeamDialogOpen, setIsEditTeamDialogOpen] = useState(false);
+  const [editTeamName, setEditTeamName] = useState("");
+  const [editingTeam, setEditingTeam] = useState<Team | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
   const fetchTeams = useUserStore(x => x.fetchTeams);
 
   const handleCreateTeam = async () => {
@@ -66,7 +70,7 @@ export function TeamSwitcher({
         const newTeam = {
           ...json.data,
           createdAt: new Date(json.data.createdAt),
-          updatedAt: new Date(json.data.updatedAt),
+          updatedAt: new Date(json.data.updatedAt || json.data.createdAt),
         };
         await fetchTeams();
         setActiveTeam(newTeam);
@@ -81,6 +85,53 @@ export function TeamSwitcher({
       toast.error("Failed to create team");
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleEditTeam = (team: Team) => {
+    setEditingTeam(team);
+    setEditTeamName(team.name);
+    setIsEditTeamDialogOpen(true);
+  };
+
+  const handleUpdateTeam = async () => {
+    if (!editTeamName.trim() || !editingTeam) {
+      toast.error("Please enter a team name");
+      return;
+    }
+
+    setIsUpdating(true);
+    try {
+      const response = await client.auth.teams[":teamId"].$put({
+        param: { teamId: editingTeam.id },
+        json: {
+          name: editTeamName,
+        },
+      });
+      const json = await response.json();
+      
+      if (json.success) {
+        const updatedTeam = {
+          ...json.data,
+          createdAt: new Date(json.data.createdAt),
+          updatedAt: new Date(json.data.updatedAt || json.data.createdAt),
+        };
+        await fetchTeams();
+        if (activeTeam?.id === editingTeam.id) {
+          setActiveTeam(updatedTeam);
+        }
+        setIsEditTeamDialogOpen(false);
+        setEditTeamName("");
+        setEditingTeam(null);
+        toast.success("Team name updated successfully");
+      } else {
+        throw new Error(stringifyActionFailure(json.errors));
+      }
+    } catch (error) {
+      console.error("Error updating team:", error);
+      toast.error("Failed to update team name");
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -153,14 +204,27 @@ export function TeamSwitcher({
               {transformedTeams.map((team, index) => (
                 <DropdownMenuItem
                   key={team.name}
-                  onClick={() => setActiveTeam(teams[index])}
-                  className="gap-2 p-2"
+                  className="gap-2 p-2 flex justify-between group"
+                  onSelect={(e) => e.preventDefault()}
                 >
-                  <div className="flex size-6 items-center justify-center rounded-md border">
-                    <team.logo className="size-3.5 shrink-0" />
+                  <div 
+                    className="flex gap-2 items-center flex-1 cursor-pointer"
+                    onClick={() => setActiveTeam(teams[index])}
+                  >
+                    <div className="flex size-6 items-center justify-center rounded-md border">
+                      <team.logo className="size-3.5 shrink-0" />
+                    </div>
+                    {team.name}
                   </div>
-                  {team.name}
-                  {/* <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut> */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditTeam(teams[index]);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 p-2 hover:bg-accent rounded transition-all"
+                  >
+                    <Pencil className="size-3" />
+                  </button>
                 </DropdownMenuItem>
               ))}
               <DropdownMenuSeparator />
@@ -248,6 +312,50 @@ export function TeamSwitcher({
             </Button>
             <Button onClick={handleCreateTeam} disabled={isCreating || !newTeamName.trim()}>
               {isCreating ? "Creating..." : "Create team"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditTeamDialogOpen} onOpenChange={setIsEditTeamDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit team name</DialogTitle>
+            <DialogDescription>
+              Update the name of "{editingTeam?.name}".
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Input
+                id="editName"
+                placeholder="Team name"
+                value={editTeamName}
+                onChange={(e) => setEditTeamName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleUpdateTeam();
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsEditTeamDialogOpen(false);
+                setEditTeamName("");
+                setEditingTeam(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleUpdateTeam} 
+              disabled={isUpdating || !editTeamName.trim() || editTeamName === editingTeam?.name}
+            >
+              {isUpdating ? "Updating..." : "Update team"}
             </Button>
           </DialogFooter>
         </DialogContent>
