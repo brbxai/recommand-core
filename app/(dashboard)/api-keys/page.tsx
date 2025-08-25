@@ -53,7 +53,7 @@ export default function Page() {
           json.apiKeys.map((key) => ({
             ...key,
             createdAt: new Date(key.createdAt),
-            updatedAt: key.updatedAt,
+            updatedAt: new Date(key.updatedAt),
           }))
         );
       }
@@ -97,7 +97,7 @@ export default function Page() {
         userId: json.apiKey.userId,
         secretHash: json.apiKey.secretHash,
         createdAt: new Date(json.apiKey.createdAt),
-        updatedAt: json.apiKey.updatedAt,
+        updatedAt: new Date(json.apiKey.updatedAt),
       };
       setApiKeys((prev) => [...prev, newApiKey]);
       setNewKeyName("");

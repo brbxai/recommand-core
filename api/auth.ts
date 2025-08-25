@@ -8,7 +8,7 @@ import { db } from "@recommand/db";
 import { users } from "@core/db/schema";
 import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
-import { createTeam, getUserTeams, getTeamMembers } from "@core/data/teams";
+import { createTeam, getUserTeams, getTeamMembers, updateTeam } from "@core/data/teams";
 import { requireAuth, requireTeamAccess } from "@core/lib/auth-middleware";
 import { getCompletedOnboardingSteps } from "@core/data/onboarding";
 import { sendEmail } from "@core/lib/email";
@@ -468,6 +468,31 @@ const resetPassword = server.post(
   }
 );
 
+const updateTeamEndpoint = server.put(
+  "/auth/teams/:teamId",
+  requireTeamAccess(),
+  zValidator(
+    "json",
+    z.object({
+      name: z.string().min(1, { message: "Team name is required" }).optional(),
+      teamDescription: z.string().optional(),
+    })
+  ),
+  async (c) => {
+    try {
+      const data = c.req.valid("json");
+      const team = c.get("team");
+
+      const updatedTeam = await updateTeam(team.id, data);
+
+      return c.json(actionSuccess({ data: updatedTeam }));
+    } catch (e) {
+      console.error(e);
+      return c.json(actionFailure("Internal server error"), 500);
+    }
+  }
+);
+
 const verify = server.get(
   "/auth/verify",
   requireAuth(),
@@ -550,6 +575,7 @@ export type Auth =
   | typeof teams
   | typeof teamMembers
   | typeof createTeamEndpoint
+  | typeof updateTeamEndpoint
   | typeof requestPasswordReset
   | typeof resetPassword
   | typeof confirmEmail

@@ -186,6 +186,7 @@ export const useUserStore = create<UserState>((set, get) => ({
       const transformedTeams = teamsData.data.map((team) => ({
         ...team,
         createdAt: new Date(team.createdAt),
+        updatedAt: new Date(team.updatedAt),
       }));
       set({
         teams: transformedTeams,
