@@ -1,4 +1,4 @@
-import { zValidator } from "@hono/zod-validator";
+import { zodValidator } from "@recommand/lib/zod-validator";
 import { z } from "zod";
 import { actionFailure, actionSuccess } from "@recommand/lib/utils";
 import { Server } from "@recommand/lib/api";
@@ -10,7 +10,7 @@ const server = new Server();
 const _completeOnboardingStep = server.post(
   "/onboarding/complete",
   requireAuth(),
-  zValidator(
+  zodValidator(
     "json",
     z.object({
       stepId: z.string(),

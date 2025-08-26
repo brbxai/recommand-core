@@ -1,4 +1,4 @@
-import { zValidator } from "@hono/zod-validator";
+import { zodValidator } from "@recommand/lib/zod-validator";
 import { z } from "zod";
 import { createUser, getCurrentUser } from "@core/data/users";
 import { createSession, deleteSession } from "@core/lib/session";
@@ -26,7 +26,7 @@ function generateSecureToken(): string {
 
 const login = server.post(
   "/auth/login",
-  zValidator(
+  zodValidator(
     "json",
     z.object({
       email: z.string().email(),
@@ -79,7 +79,7 @@ const login = server.post(
 
 const signup = server.post(
   "/auth/signup",
-  zValidator(
+  zodValidator(
     "json",
     z.object({
       email: z.string().email(),
@@ -195,7 +195,7 @@ const teamMembers = server.get(
 const createTeamEndpoint = server.post(
   "/auth/teams",
   requireAuth(),
-  zValidator(
+  zodValidator(
     "json",
     z.object({
       name: z.string().min(1, { message: "Team name is required" }),
@@ -222,7 +222,7 @@ const createTeamEndpoint = server.post(
 
 const requestPasswordReset = server.post(
   "/auth/request-password-reset",
-  zValidator(
+  zodValidator(
     "json",
     z.object({
       email: z.string().email(),
@@ -280,7 +280,7 @@ const requestPasswordReset = server.post(
 
 const confirmEmail = server.post(
   "/auth/confirm-email",
-  zValidator(
+  zodValidator(
     "json",
     z.object({
       token: z.string(),
@@ -346,7 +346,7 @@ const confirmEmail = server.post(
 
 const resendConfirmationEmail = server.post(
   "/auth/resend-confirmation",
-  zValidator(
+  zodValidator(
     "json",
     z.object({
       email: z.string().email(),
@@ -419,7 +419,7 @@ const resendConfirmationEmail = server.post(
 
 const resetPassword = server.post(
   "/auth/reset-password",
-  zValidator(
+  zodValidator(
     "json",
     z.object({
       token: z.string(),
@@ -471,7 +471,7 @@ const resetPassword = server.post(
 const updateTeamEndpoint = server.put(
   "/auth/teams/:teamId",
   requireTeamAccess(),
-  zValidator(
+  zodValidator(
     "json",
     z.object({
       name: z.string().min(1, { message: "Team name is required" }).optional(),

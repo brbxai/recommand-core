@@ -1,4 +1,4 @@
-import { zValidator } from "@hono/zod-validator";
+import { zodValidator } from "@recommand/lib/zod-validator";
 import { z } from "zod";
 import { actionFailure, actionSuccess } from "@recommand/lib/utils";
 import { Server } from "@recommand/lib/api";
@@ -10,7 +10,7 @@ const server = new Server();
 const _getApiKeys = server.get(
   "/:teamId/api-keys",
   requireTeamAccess(),
-  zValidator(
+  zodValidator(
     "param",
     z.object({
       teamId: z.string(),
@@ -33,13 +33,13 @@ const _getApiKeys = server.get(
 const _createApiKey = server.post(
   "/:teamId/api-keys",
   requireTeamAccess(),
-  zValidator(
+  zodValidator(
     "param",
     z.object({
       teamId: z.string(),
     })
   ),
-  zValidator(
+  zodValidator(
     "json",
     z.object({
       name: z.string(),
@@ -62,7 +62,7 @@ const _createApiKey = server.post(
 const _deleteApiKey = server.delete(
   "/:teamId/api-keys/:apiKeyId",
   requireTeamAccess(),
-  zValidator(
+  zodValidator(
     "param",
     z.object({
       teamId: z.string(),
