@@ -31,6 +31,29 @@ interface UserState {
 }
 
 const client = rc<Auth>("core");
+
+const ACTIVE_TEAM_STORAGE_KEY = "recommand-active-team-id";
+
+function getStoredActiveTeamId(): string | null {
+  try {
+    return localStorage.getItem(ACTIVE_TEAM_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function setStoredActiveTeamId(teamId: string | null): void {
+  try {
+    if (teamId) {
+      localStorage.setItem(ACTIVE_TEAM_STORAGE_KEY, teamId);
+    } else {
+      localStorage.removeItem(ACTIVE_TEAM_STORAGE_KEY);
+    }
+  } catch {
+    // Ignore localStorage errors
+  }
+}
+
 function transformUserData(data: any): UserWithoutPassword & {
   teams?: Team[];
   completedOnboardingSteps: MinimalCompletedOnboardingStep[];
@@ -70,10 +93,15 @@ export const useUserStore = create<UserState>((set, get) => ({
       const userData = await userRes.json();
       if (userData.success && userData.data) {
         const transformedUser = transformUserData(userData.data);
+        const storedTeamId = getStoredActiveTeamId();
+        const storedTeam = storedTeamId 
+          ? transformedUser.teams?.find(team => team.id === storedTeamId)
+          : null;
+        
         set({
           user: transformedUser,
           teams: transformedUser.teams,
-          activeTeam: get().activeTeam || transformedUser.teams?.[0] || null,
+          activeTeam: get().activeTeam || storedTeam || transformedUser.teams?.[0] || null,
           isLoading: false,
           completedOnboardingSteps: transformedUser.completedOnboardingSteps,
         });
@@ -155,7 +183,8 @@ export const useUserStore = create<UserState>((set, get) => ({
       const response = await res.json();
 
       if (response.success) {
-        set({ user: null, isLoading: false });
+        set({ user: null, isLoading: false, activeTeam: null, teams: [] });
+        setStoredActiveTeamId(null);
       } else {
         set({
           error: stringifyActionFailure(response.errors),
@@ -188,10 +217,15 @@ export const useUserStore = create<UserState>((set, get) => ({
         createdAt: new Date(team.createdAt),
         updatedAt: new Date(team.updatedAt),
       }));
+      const storedTeamId = getStoredActiveTeamId();
+      const storedTeam = storedTeamId 
+        ? transformedTeams.find(team => team.id === storedTeamId)
+        : null;
+      
       set({
         teams: transformedTeams,
         teamsAreLoaded: true,
-        activeTeam: get().activeTeam || transformedTeams[0] || null,
+        activeTeam: get().activeTeam || storedTeam || transformedTeams[0] || null,
       });
     } else {
       set({
@@ -206,8 +240,10 @@ export const useUserStore = create<UserState>((set, get) => ({
     if (typeof team === "string") {
       const foundTeam = get().teams.find((t) => t.id === team);
       set({ activeTeam: foundTeam || null });
+      setStoredActiveTeamId(foundTeam?.id || null);
     } else {
       set({ activeTeam: team });
+      setStoredActiveTeamId(team?.id || null);
     }
   },
 }));
