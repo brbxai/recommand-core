@@ -170,19 +170,6 @@ export default function Page() {
       ),
     },
     {
-      accessorKey: "user.isAdmin",
-      header: ({ column }) => <ColumnHeader column={column} title="Admin" />,
-      cell: ({ row }) => (
-        <div className="flex items-center">
-          {row.original.user.isAdmin ? (
-            <span className="text-blue-600">Admin</span>
-          ) : (
-            <span className="text-muted-foreground">Member</span>
-          )}
-        </div>
-      ),
-    },
-    {
       accessorKey: "createdAt",
       header: ({ column }) => (
         <ColumnHeader column={column} title="Joined At" />
