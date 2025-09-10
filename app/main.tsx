@@ -4,7 +4,7 @@ import { BrowserRouter, Route, Routes, useLocation, useNavigate } from 'react-ro
 import { routes } from 'virtual:recommand-file-based-router'
 import './index.css'
 import { useMenuItemActions } from '@core/lib/menu-store';
-import { KeyRound, LogOut } from 'lucide-react';
+import { KeyRound, LogOut, Users } from 'lucide-react';
 import { useUserStore } from '@core/lib/user-store';
 
 const renderRoute = (r: typeof routes[number]) => {
@@ -31,6 +31,13 @@ export default function Main({ children }: { children: React.ReactNode }) {
             title: 'API Keys',
             icon: KeyRound,
             href: '/api-keys',
+        });
+
+        registerMenuItem({
+            id: 'user.api.team',
+            title: 'Team',
+            icon: Users,
+            href: '/team',
         });
 
         registerMenuItem({

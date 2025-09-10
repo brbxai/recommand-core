@@ -5,6 +5,7 @@ import { users } from "../db/schema";
 import { eq, getTableColumns } from "drizzle-orm";
 import type { Context } from "@recommand/lib/api";
 import { teamMembers, teams } from "@core/db/schema";
+import { randomBytes } from "crypto";
 
 export type UserWithoutPassword = Omit<typeof users.$inferSelect, "password">;
 
@@ -67,6 +68,36 @@ export const createUser = async (userInfo: {
       passwordHash: hashedPassword,
     })
     .returning({ id: users.id, isAdmin: users.isAdmin });
+
+  return user;
+};
+
+export const createUserForInvitation = async (email: string) => {
+  // Check if user already exists
+  const existingUsers = await db
+    .select({
+      id: users.id,
+      email: users.email,
+      emailVerified: users.emailVerified,
+    })
+    .from(users)
+    .where(eq(users.email, email));
+  if (existingUsers.length > 0) {
+    return existingUsers[0];
+  }
+
+  // Create user with temporary password (they'll need to reset it)
+  const tempPassword = randomBytes(32).toString('hex');
+  const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+  const [user] = await db
+    .insert(users)
+    .values({
+      email: email,
+      passwordHash: hashedPassword,
+      emailVerified: false,
+    })
+    .returning();
 
   return user;
 };

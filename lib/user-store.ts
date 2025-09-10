@@ -27,7 +27,8 @@ interface UserState {
   teamsAreLoaded: boolean;
   fetchTeams: () => Promise<void>;
   activeTeam: Team | null;
-  setActiveTeam: (team: Team | string) => void;
+  setActiveTeam: (team: Team | string | null) => void;
+  removeTeam: (teamId: string) => void;
 }
 
 const client = rc<Auth>("core");
@@ -94,10 +95,10 @@ export const useUserStore = create<UserState>((set, get) => ({
       if (userData.success && userData.data) {
         const transformedUser = transformUserData(userData.data);
         const storedTeamId = getStoredActiveTeamId();
-        const storedTeam = storedTeamId 
+        const storedTeam = storedTeamId
           ? transformedUser.teams?.find(team => team.id === storedTeamId)
           : null;
-        
+
         set({
           user: transformedUser,
           teams: transformedUser.teams,
@@ -218,10 +219,10 @@ export const useUserStore = create<UserState>((set, get) => ({
         updatedAt: new Date(team.updatedAt),
       }));
       const storedTeamId = getStoredActiveTeamId();
-      const storedTeam = storedTeamId 
+      const storedTeam = storedTeamId
         ? transformedTeams.find(team => team.id === storedTeamId)
         : null;
-      
+
       set({
         teams: transformedTeams,
         teamsAreLoaded: true,
@@ -236,7 +237,7 @@ export const useUserStore = create<UserState>((set, get) => ({
     }
   },
 
-  setActiveTeam: (team: Team | string) => {
+  setActiveTeam: (team: Team | string | null) => {
     if (typeof team === "string") {
       const foundTeam = get().teams.find((t) => t.id === team);
       set({ activeTeam: foundTeam || null });
@@ -245,5 +246,16 @@ export const useUserStore = create<UserState>((set, get) => ({
       set({ activeTeam: team });
       setStoredActiveTeamId(team?.id || null);
     }
+  },
+
+  removeTeam: (teamId: string) => {
+    set((state) => {
+      const newTeams = state.teams.filter((t) => t.id !== teamId);
+      const newActiveTeam = state.activeTeam?.id === teamId ? (newTeams[0] || null) : state.activeTeam;
+      return {
+        teams: newTeams,
+        activeTeam: newActiveTeam,
+      };
+    });
   },
 }));

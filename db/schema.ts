@@ -7,7 +7,6 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 import { ulid } from "ulid";
-import { sql } from "drizzle-orm";
 import { autoUpdateTimestamp } from "@recommand/db/custom-types";
 
 export const users = pgTable("users", {
@@ -39,7 +38,7 @@ export const teams = pgTable("teams", {
 export const teamMembers = pgTable(
   "team_members",
   {
-    teamId: text("team_id").references(() => teams.id),
+    teamId: text("team_id").references(() => teams.id, { onDelete: "cascade" }),
     userId: text("user_id").references(() => users.id),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: autoUpdateTimestamp(),
@@ -55,7 +54,7 @@ export const apiKeys = pgTable(
       .$defaultFn(() => "key_" + ulid()),
     name: text("name").notNull(),
     teamId: text("team_id")
-      .references(() => teams.id)
+      .references(() => teams.id, { onDelete: "cascade" })
       .notNull(),
     userId: text("user_id")
       .references(() => users.id)
@@ -73,7 +72,7 @@ export const completedOnboardingSteps = pgTable(
     userId: text("user_id")
       .references(() => users.id)
       .notNull(),
-    teamId: text("team_id").references(() => teams.id),
+    teamId: text("team_id").references(() => teams.id, { onDelete: "cascade" }),
     stepId: text("step_id").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: autoUpdateTimestamp(),

@@ -8,7 +8,7 @@ import { db } from "@recommand/db";
 import { users } from "@core/db/schema";
 import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
-import { createTeam, getUserTeams, getTeamMembers, updateTeam } from "@core/data/teams";
+import { createTeam, getUserTeams, updateTeam, deleteTeam } from "@core/data/teams";
 import { requireAuth, requireTeamAccess } from "@core/lib/auth-middleware";
 import { getCompletedOnboardingSteps } from "@core/data/onboarding";
 import { sendEmail } from "@core/lib/email";
@@ -176,21 +176,6 @@ const teams = server.get("/auth/teams", requireAuth(), async (c) => {
     return c.json(actionFailure("Internal server error"), 500);
   }
 });
-
-const teamMembers = server.get(
-  "/auth/teams/:teamId/members",
-  requireTeamAccess(),
-  async (c) => {
-    try {
-      const teamId = c.get("team").id;
-      const members = await getTeamMembers(teamId);
-      return c.json(actionSuccess({ data: members }));
-    } catch (e) {
-      console.error(e);
-      return c.json(actionFailure("Internal server error"), 500);
-    }
-  }
-);
 
 const createTeamEndpoint = server.post(
   "/auth/teams",
@@ -450,13 +435,16 @@ const resetPassword = server.post(
       // Hash new password
       const passwordHash = await bcrypt.hash(password, 10);
 
-      // Update password and clear reset token
+      // Update password and clear reset token, also set emailVerified to true and clear emailVerificationToken and emailVerificationExpires
       await db
         .update(users)
         .set({
           passwordHash,
           resetToken: null,
           resetTokenExpires: null,
+          emailVerified: true,
+          emailVerificationToken: null,
+          emailVerificationExpires: null,
         })
         .where(eq(users.id, user.id));
 
@@ -486,6 +474,29 @@ const updateTeamEndpoint = server.put(
       const updatedTeam = await updateTeam(team.id, data);
 
       return c.json(actionSuccess({ data: updatedTeam }));
+    } catch (e) {
+      console.error(e);
+      return c.json(actionFailure("Internal server error"), 500);
+    }
+  }
+);
+
+const deleteTeamEndpoint = server.delete(
+  "/auth/teams/:teamId",
+  requireTeamAccess(),
+  zodValidator(
+    "param",
+    z.object({
+      teamId: z.string(),
+    })
+  ),
+  async (c) => {
+    try {
+      const team = c.get("team");
+      
+      await deleteTeam(team.id);
+      
+      return c.json(actionSuccess({ message: "Team deleted successfully" }));
     } catch (e) {
       console.error(e);
       return c.json(actionFailure("Internal server error"), 500);
@@ -573,9 +584,9 @@ export type Auth =
   | typeof logout
   | typeof me
   | typeof teams
-  | typeof teamMembers
   | typeof createTeamEndpoint
   | typeof updateTeamEndpoint
+  | typeof deleteTeamEndpoint
   | typeof requestPasswordReset
   | typeof resetPassword
   | typeof confirmEmail

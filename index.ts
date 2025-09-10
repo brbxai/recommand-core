@@ -6,6 +6,7 @@ import { migrations } from "@recommand/db/schema";
 import auth from "api/auth";
 import apiKeys from "api/api-keys";
 import onboarding from "./api/onboarding";
+import teamMembers from "./api/team-members";
 
 let logger: Logger;
 
@@ -25,6 +26,7 @@ server.get("/tasks", async (c) => {
 });
 
 server.route("/", auth);
+server.route("/", teamMembers);
 server.route("/", apiKeys);
 server.route("/", onboarding);
 

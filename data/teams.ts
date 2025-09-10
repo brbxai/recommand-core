@@ -40,20 +40,6 @@ export async function isMember(userId: string, teamId: string) {
   return cnt > 0;
 }
 
-export async function getTeamMembers(teamId: string) {
-  const members = await db
-    .select({
-      id: users.id,
-      email: users.email,
-      isAdmin: users.isAdmin,
-      createdAt: users.createdAt,
-    })
-    .from(users)
-    .innerJoin(teamMembers, eq(users.id, teamMembers.userId))
-    .where(eq(teamMembers.teamId, teamId));
-  return members;
-}
-
 export async function updateTeam(
   teamId: string,
   updates: Partial<Pick<typeof teams.$inferInsert, 'name' | 'teamDescription'>>
@@ -66,4 +52,6 @@ export async function updateTeam(
   return updatedTeam;
 }
 
-export type TeamMember = Awaited<ReturnType<typeof getTeamMembers>>[0];
+export async function deleteTeam(teamId: string) {
+  return await db.delete(teams).where(eq(teams.id, teamId));
+}
