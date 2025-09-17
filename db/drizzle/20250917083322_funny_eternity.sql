@@ -1,0 +1,1 @@
+ALTER TABLE "teams" ALTER COLUMN "team_description" SET DEFAULT '-';
