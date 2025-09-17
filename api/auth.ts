@@ -1,6 +1,6 @@
 import { zodValidator } from "@recommand/lib/zod-validator";
 import { z } from "zod";
-import { createUser, getCurrentUser } from "@core/data/users";
+import { checkBasicAuth, createUser, getCurrentUser } from "@core/data/users";
 import { createSession, deleteSession } from "@core/lib/session";
 import { actionFailure, actionSuccess } from "@recommand/lib/utils";
 import { Server } from "@recommand/lib/api";
@@ -37,34 +37,19 @@ const login = server.post(
     try {
       const data = c.req.valid("json");
 
-      // Find user and verify password
-      const matchingUsers = await db
-        .select({
-          id: users.id,
-          isAdmin: users.isAdmin,
-          password: users.passwordHash,
-          emailVerified: users.emailVerified,
-        })
-        .from(users)
-        .where(eq(users.email, data.email));
-
-      const user = matchingUsers[0];
-      if (!user) {
+      // Check if user exists and password is correct
+      const userInfo = await checkBasicAuth(data.email, data.password);
+      if (!userInfo.passwordMatch) {
+        return c.json(actionFailure("Incorrect password"), 401);
+      }
+      if (!userInfo.emailVerified) {
+        return c.json(actionFailure("Please confirm your email address before logging in"), 401);
+      }
+      if (!userInfo.user) {
         return c.json(actionFailure("User not found"), 404);
       }
 
-      const passwordMatch = await bcrypt.compare(data.password, user.password);
-      if (!passwordMatch) {
-        return c.json(actionFailure("Incorrect password"), 401);
-      }
-
-      // Check if email is verified
-      if (!user.emailVerified) {
-        return c.json(
-          actionFailure("Please confirm your email address before logging in"),
-          401
-        );
-      }
+      const user = userInfo.user;
 
       // Create session
       await createSession(c, user);

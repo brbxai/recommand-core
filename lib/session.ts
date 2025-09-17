@@ -7,6 +7,7 @@ import {
   deleteCookie,
 } from "@recommand/lib/api/cookie";
 import { checkApiKey, type ApiKey } from "@core/data/api-keys";
+import { checkBasicAuth } from "@core/data/users";
 
 if (!process.env.JWT_SECRET) {
   console.warn("JWT_SECRET is not set");
@@ -95,6 +96,18 @@ export async function verifySession(c: Context): Promise<{
       const apiKey = await checkApiKey(apiKeyId, secret);
       if (apiKey) {
         result = { userId: apiKey.user.id, isAdmin: apiKey.user.isAdmin, apiKey: apiKey.apiKey };
+      }
+    }
+  } 
+  if (!result) {
+    // We will try basic auth next
+    const basicAuth = c.req.header("Authorization")?.split(" ")[1];
+    if (basicAuth) {
+      const credentials = Buffer.from(basicAuth, "base64").toString("utf-8");
+      const [username, password] = credentials.split(":");
+      const userInfo = await checkBasicAuth(username, password);
+      if (userInfo.user) {
+        result = { userId: userInfo.user.id, isAdmin: userInfo.user.isAdmin, apiKey: undefined };
       }
     }
   }

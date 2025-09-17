@@ -101,3 +101,46 @@ export const createUserForInvitation = async (email: string) => {
 
   return user;
 };
+
+export const checkBasicAuth = async (username: string, password: string) => {
+  const user = await db
+    .select({
+      id: users.id,
+      isAdmin: users.isAdmin,
+      password: users.passwordHash,
+      emailVerified: users.emailVerified,
+    })
+    .from(users)
+    .where(eq(users.email, username));
+
+  if (user.length === 0) {
+    return {
+      user: null,
+      passwordMatch: false,
+      emailVerified: false,
+    }
+  }
+
+  const passwordMatch = await bcrypt.compare(password, user[0].password);
+  if (!passwordMatch) {
+    return {
+      user: null,
+      passwordMatch: false,
+      emailVerified: false,
+    }
+  }
+
+  if (!user[0].emailVerified) {
+    return {
+      user: null,
+      passwordMatch: true,
+      emailVerified: false,
+    }
+  }
+
+  return {
+    user: user[0],
+    passwordMatch: true,
+    emailVerified: true,
+  }
+};
