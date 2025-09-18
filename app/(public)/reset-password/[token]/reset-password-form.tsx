@@ -67,7 +67,15 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   };
 
   return (
-    <Card className="mx-auto">
+    <div className="flex flex-col gap-6">
+      <div className="flex justify-center mb-4">
+        <img 
+          src="/logo.svg" 
+          alt="Logo" 
+          className="h-12 w-auto"
+        />
+      </div>
+      <Card className="mx-auto">
       <CardHeader>
         <CardTitle>Reset password</CardTitle>
         <CardDescription>
@@ -104,5 +112,6 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         </form>
       </CardContent>
     </Card>
+    </div>
   );
 }

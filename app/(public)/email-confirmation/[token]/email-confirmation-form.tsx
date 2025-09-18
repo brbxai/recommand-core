@@ -73,7 +73,15 @@ export default function EmailConfirmationForm({
 
   if (isConfirming) {
     return (
-      <Card className="mx-auto max-w-md">
+      <div className="flex flex-col gap-6">
+        <div className="flex justify-center mb-4">
+          <img 
+            src="/logo.svg" 
+            alt="Logo" 
+            className="h-12 w-auto"
+          />
+        </div>
+        <Card className="mx-auto max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl">Confirming Email</CardTitle>
           <CardDescription>
@@ -81,12 +89,21 @@ export default function EmailConfirmationForm({
           </CardDescription>
         </CardHeader>
       </Card>
+      </div>
     );
   }
 
   if (isConfirmed) {
     return (
-      <Card className="mx-auto max-w-md">
+      <div className="flex flex-col gap-6">
+        <div className="flex justify-center mb-4">
+          <img 
+            src="/logo.svg" 
+            alt="Logo" 
+            className="h-12 w-auto"
+          />
+        </div>
+        <Card className="mx-auto max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl">Email Confirmed!</CardTitle>
           <CardDescription>
@@ -100,12 +117,21 @@ export default function EmailConfirmationForm({
           </Button>
         </CardContent>
       </Card>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Card className="mx-auto max-w-md">
+      <div className="flex flex-col gap-6">
+        <div className="flex justify-center mb-4">
+          <img 
+            src="/logo.svg" 
+            alt="Logo" 
+            className="h-12 w-auto"
+          />
+        </div>
+        <Card className="mx-auto max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl">Confirmation Failed</CardTitle>
           <CardDescription className="text-destructive">
@@ -130,11 +156,20 @@ export default function EmailConfirmationForm({
           </div>
         </CardContent>
       </Card>
+      </div>
     );
   }
 
   return (
-    <Card className="mx-auto max-w-md">
+    <div className="flex flex-col gap-6">
+      <div className="flex justify-center mb-4">
+        <img 
+          src="/logo.svg" 
+          alt="Logo" 
+          className="h-12 w-auto"
+        />
+      </div>
+      <Card className="mx-auto max-w-md">
       <CardHeader>
         <CardTitle className="text-2xl">Invalid Link</CardTitle>
         <CardDescription>
@@ -147,5 +182,6 @@ export default function EmailConfirmationForm({
         </Button>
       </CardContent>
     </Card>
+    </div>
   );
 }

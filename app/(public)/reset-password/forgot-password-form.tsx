@@ -50,7 +50,15 @@ export default function ForgotPasswordForm() {
 
   if (isSubmitted) {
     return (
-      <Card className="mx-auto max-w-md">
+      <div className="flex flex-col gap-6">
+        <div className="flex justify-center mb-4">
+          <img 
+            src="/logo.svg" 
+            alt="Logo" 
+            className="h-12 w-auto"
+          />
+        </div>
+        <Card className="mx-auto max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl">Reset link sent</CardTitle>
           <CardDescription>
@@ -59,11 +67,20 @@ export default function ForgotPasswordForm() {
           </CardDescription>
         </CardHeader>
       </Card>
+      </div>
     );
   }
 
   return (
-    <Card className="mx-auto max-w-md">
+    <div className="flex flex-col gap-6">
+      <div className="flex justify-center mb-4">
+        <img 
+          src="/logo.svg" 
+          alt="Logo" 
+          className="h-12 w-auto"
+        />
+      </div>
+      <Card className="mx-auto max-w-md">
       <CardHeader>
         <CardTitle className="text-2xl">Forgot password</CardTitle>
         <CardDescription>
@@ -90,5 +107,6 @@ export default function ForgotPasswordForm() {
         </form>
       </CardContent>
     </Card>
+    </div>
   );
 }
