@@ -5,7 +5,6 @@ import { useUserStore } from "@core/lib/user-store";
 import { rc } from "@recommand/lib/client";
 import { stringifyActionFailure } from "@recommand/lib/utils";
 import type { Onboarding } from "api/onboarding";
-import Logo from "@core/assets/recommand-logo.svg";
 import { Button } from "@core/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { useCallback } from "react";
@@ -46,7 +45,7 @@ export default function Onboarding({ step }: { step: OnboardingStep }) {
 
   return <div>
     <div className="flex flex-col items-center py-12 space-y-12 h-svh">
-      <img src={Logo} alt="Recommand Logo" className="h-8 w-auto min-w-32" />
+      <img src="/logo.svg" alt="Recommand Logo" className="h-8 w-auto min-w-32" />
       <div className="flex flex-col items-center space-y-2">
         <h1 className="text-2xl font-bold">{step.title}</h1>
         {step.description && <p className="text-sm text-muted-foreground text-balance max-w-sm">{step.description}</p>}
