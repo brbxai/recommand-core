@@ -25,7 +25,7 @@ const _getApiKeys = server.get(
       })
     );
   } catch (error) {
-      return c.json(actionFailure(error as Error));
+      return c.json(actionFailure(error as Error), 500);
     }
   }
 );
@@ -54,7 +54,7 @@ const _createApiKey = server.post(
       );
       return c.json(actionSuccess({ apiKey }));
     } catch (error) {
-      return c.json(actionFailure(error as Error));
+      return c.json(actionFailure(error as Error), 500);
     }
   }
 );
@@ -74,7 +74,7 @@ const _deleteApiKey = server.delete(
       await deleteApiKey(c.var.user.id, c.var.team.id, c.req.param("apiKeyId"));
       return c.json(actionSuccess());
     } catch (error) {
-      return c.json(actionFailure(error as Error));
+      return c.json(actionFailure(error as Error), 500);
     }
   }
 );

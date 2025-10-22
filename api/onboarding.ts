@@ -25,7 +25,7 @@ const _completeOnboardingStep = server.post(
         completedStep,
       }));
     } catch (error) {
-      return c.json(actionFailure(error as Error));
+      return c.json(actionFailure(error as Error), 500);
     }
   }
 );

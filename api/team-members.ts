@@ -136,7 +136,7 @@ const _removeTeamMember = server.delete(
       await removeTeamMember(c.get("team").id, c.req.param("userId"));
       return c.json(actionSuccess());
     } catch (error) {
-      return c.json(actionFailure(error as Error));
+      return c.json(actionFailure(error as Error), 500);
     }
   }
 );
