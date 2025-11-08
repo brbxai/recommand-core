@@ -16,8 +16,13 @@ import { toast } from "@core/components/ui/sonner";
 import { stringifyActionFailure } from "@recommand/lib/utils";
 import type { ApiKey } from "@core/data/api-keys";
 import { useActiveTeam } from "@core/hooks/user";
-import { Trash2, Loader2, Copy } from "lucide-react";
+import { Trash2, Loader2, Copy, ChevronDown } from "lucide-react";
 import { ColumnHeader } from "@core/components/data-table/column-header";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@core/components/ui/collapsible";
 
 const client = rc<ApiKeys>("core");
 
@@ -289,6 +294,41 @@ export default function Page() {
                   </Button>
                 </div>
               </div>
+              <Collapsible>
+                <CollapsibleTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="w-full font-normal [&[data-state=open]>svg]:rotate-180"
+                  >
+                    <label className="text-sm font-medium">
+                      View Authorization Header
+                    </label>
+                    <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="pt-2">
+                    <label className="text-sm font-medium">Authorization Header</label>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Input
+                        value={`Authorization: Basic ${btoa(`${newKey.key}:${newKey.secret}`)}`}
+                        readOnly
+                        className="font-mono"
+                      />
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          const authHeader = `Authorization: Basic ${btoa(`${newKey.key}:${newKey.secret}`)}`;
+                          navigator.clipboard.writeText(authHeader);
+                          toast.success("Authorization header copied to clipboard");
+                        }}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
             </div>
             <Button variant="outline" onClick={() => setNewKey(null)}>
               Close
