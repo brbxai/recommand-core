@@ -1,6 +1,6 @@
 {
-  "id": "6c104947-0b26-4e5d-8971-9a23789f443c",
-  "prevId": "c4fbc8bd-fae0-4e0d-94e0-27f08807d6cf",
+  "id": "ad1044eb-540f-485a-8dff-b7d469468997",
+  "prevId": "6c104947-0b26-4e5d-8971-9a23789f443c",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -20,6 +20,14 @@
           "primaryKey": false,
           "notNull": true
         },
+        "type": {
+          "name": "type",
+          "type": "api_key_types",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'basic'"
+        },
         "team_id": {
           "name": "team_id",
           "type": "text",
@@ -37,6 +45,12 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",
@@ -81,7 +95,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "api_keys_user_id_users_id_fk": {
@@ -166,7 +180,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -228,7 +242,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "team_members_user_id_users_id_fk": {
@@ -397,7 +411,16 @@
       "isRLSEnabled": false
     }
   },
-  "enums": {},
+  "enums": {
+    "public.api_key_types": {
+      "name": "api_key_types",
+      "schema": "public",
+      "values": [
+        "basic",
+        "jwt"
+      ]
+    }
+  },
   "schemas": {},
   "sequences": {},
   "roles": {},

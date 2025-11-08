@@ -1,19 +1,17 @@
 import { type Context } from "@recommand/lib/api";
-import { SignJWT, jwtVerify } from "jose";
-import type { JWTPayload } from "jose";
 import {
   getSignedCookie,
   setSignedCookie,
   deleteCookie,
 } from "@recommand/lib/api/cookie";
-import { checkApiKey, type ApiKey } from "@core/data/api-keys";
+import { checkApiKey, getApiKey, type ApiKey } from "@core/data/api-keys";
 import { checkBasicAuth } from "@core/data/users";
+import { verify, sign } from "./jwt";
+import { addMilliseconds } from "date-fns";
+import { db } from "@recommand/db";
+import { users } from "@core/db/schema";
+import { eq } from "drizzle-orm";
 
-if (!process.env.JWT_SECRET) {
-  console.warn("JWT_SECRET is not set");
-}
-
-const key = new TextEncoder().encode(process.env.JWT_SECRET);
 
 const cookie = {
   name: "session",
@@ -23,38 +21,20 @@ const cookie = {
     sameSite: "Lax" as const,
     path: "/",
   },
-  duration: 24 * 60 * 60 * 1000, // 24 hours
+  duration: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
 };
 
-export async function encrypt(payload: JWTPayload) {
-  return new SignJWT(payload)
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime("1day")
-    .sign(key);
-}
-
-export async function decrypt(session: string | Uint8Array) {
-  try {
-    const { payload } = await jwtVerify(session, key, {
-      algorithms: ["HS256"],
-    });
-    return payload;
-  } catch (error) {
-    return null;
-  }
-}
 
 export async function createSession(
   c: Context,
   user: { id: string; isAdmin: boolean }
 ) {
-  const expires = new Date(Date.now() + cookie.duration);
-  const session = await encrypt({
+  const expires = addMilliseconds(new Date(), cookie.duration);
+  const session = await sign({
     userId: user.id,
     isAdmin: user.isAdmin,
     expires,
-  });
+  }, expires);
 
   await setSignedCookie(c, cookie.name, session, process.env.JWT_SECRET!, {
     ...cookie.options,
@@ -69,6 +49,10 @@ export async function verifySession(c: Context): Promise<{
 } | null> {
   let result: { userId: string; isAdmin: boolean; apiKey?: ApiKey } | null = null;
 
+  if(!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET is not set");
+  }
+
   const sessionCookie = await getSignedCookie(
     c,
     process.env.JWT_SECRET!,
@@ -76,7 +60,7 @@ export async function verifySession(c: Context): Promise<{
   );
 
   if (sessionCookie) {
-    const session = await decrypt(sessionCookie);
+    const session = await verify(sessionCookie);
     if (!session?.userId) {
       return null;
     }
@@ -86,12 +70,50 @@ export async function verifySession(c: Context): Promise<{
       apiKey: undefined,
     };
   } else {
-    // We will try api keys next (Basic token auth)
-    const encodedCredentials = c.req.header("Authorization")?.split(" ")[1];
-    if (encodedCredentials) {
-      const credentials = Buffer.from(encodedCredentials, "base64").toString(
-        "utf-8"
-      );
+    // We will try api keys next (Basic auth or JWT auth)
+    const authorizationHeader = c.req.header("Authorization")?.split(" ");
+    if(!authorizationHeader || authorizationHeader.length !== 2) {
+      return null;
+    }
+
+    const authorizationType = authorizationHeader[0];
+    const encodedCredentials = authorizationHeader[1];
+
+    if(!authorizationType.trim() || !encodedCredentials.trim()){
+      return null;
+    }
+ 
+    
+    if (authorizationType === "Bearer") {
+      const jwtPayload = await verify(encodedCredentials);
+      if(!jwtPayload?.sub || !jwtPayload.jti || !jwtPayload.teamId){
+        return null;
+      }
+
+      // Cross-check the JWT with the database to ensure it has not been revoked and is fully valid
+      const apiKey = await getApiKey(jwtPayload.jti as string);
+      if(!apiKey || apiKey.expiresAt && apiKey.expiresAt < new Date() || apiKey.type !== "jwt" || apiKey.teamId !== jwtPayload.teamId) {
+        return null;
+      }
+
+      let isAdmin = false;
+      if(jwtPayload.isAdmin){
+        // Double check with the database to ensure the user is an admin, as an extra security measure
+        const user = await db.select({ isAdmin: users.isAdmin }).from(users).where(eq(users.id, jwtPayload.sub as string)).limit(1);
+        if(user.length === 0 || !user[0].isAdmin){
+          return null;
+        }
+        isAdmin = user[0].isAdmin;
+      }
+
+      result = {
+        userId: jwtPayload.sub as string,
+        isAdmin,
+        apiKey,
+      }
+      
+    }else if (authorizationType === "Basic") {
+      const credentials = Buffer.from(encodedCredentials, "base64").toString("utf-8");
       const [apiKeyId, secret] = credentials.split(":");
       const apiKey = await checkApiKey(apiKeyId, secret);
       if (apiKey) {

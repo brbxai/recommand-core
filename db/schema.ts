@@ -1,6 +1,7 @@
 import {
   boolean,
   index,
+  pgEnum,
   pgTable,
   primaryKey,
   text,
@@ -46,6 +47,8 @@ export const teamMembers = pgTable(
   (table) => [primaryKey({ columns: [table.teamId, table.userId] })]
 );
 
+export const apiKeyTypes = pgEnum("api_key_types", ["basic", "jwt"]);
+
 export const apiKeys = pgTable(
   "api_keys",
   {
@@ -53,6 +56,7 @@ export const apiKeys = pgTable(
       .primaryKey()
       .$defaultFn(() => "key_" + ulid()),
     name: text("name").notNull(),
+    type: apiKeyTypes("type").default("basic").notNull(),
     teamId: text("team_id")
       .references(() => teams.id, { onDelete: "cascade" })
       .notNull(),
@@ -60,6 +64,7 @@ export const apiKeys = pgTable(
       .references(() => users.id)
       .notNull(),
     secretHash: text("secret_hash").notNull(),
+    expiresAt: timestamp("expires_at"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: autoUpdateTimestamp(),
   },

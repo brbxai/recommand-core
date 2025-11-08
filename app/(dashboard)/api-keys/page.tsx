@@ -12,6 +12,7 @@ import {
 import type { SortingState } from "@tanstack/react-table";
 import { Button } from "@core/components/ui/button";
 import { Input } from "@core/components/ui/input";
+import { Label } from "@core/components/ui/label";
 import { toast } from "@core/components/ui/sonner";
 import { stringifyActionFailure } from "@recommand/lib/utils";
 import type { ApiKey } from "@core/data/api-keys";
@@ -23,16 +24,28 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@core/components/ui/collapsible";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@core/components/ui/select";
 
 const client = rc<ApiKeys>("core");
 
 export default function Page() {
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [newKeyName, setNewKeyName] = useState("");
+  const [keyType, setKeyType] = useState<"basic" | "jwt">("basic");
+  const [expirationDuration, setExpirationDuration] = useState<string>("24");
+  const [expirationUnit, setExpirationUnit] = useState<"hours" | "days">("hours");
   const [isLoading, setIsLoading] = useState(true);
-  const [newKey, setNewKey] = useState<{ key: string; secret: string } | null>(
-    null
-  );
+  const [newKey, setNewKey] = useState<
+    | { key: string; secret: string; type: "basic" }
+    | { jwt: string; type: "jwt"; expiresAt: Date }
+    | null
+  >(null);
   const [sorting, setSorting] = useState<SortingState>([]);
   const activeTeam = useActiveTeam();
 
@@ -59,6 +72,7 @@ export default function Page() {
             ...key,
             createdAt: new Date(key.createdAt),
             updatedAt: new Date(key.updatedAt),
+            expiresAt: key.expiresAt ? new Date(key.expiresAt) : null,
           }))
         );
       }
@@ -75,6 +89,14 @@ export default function Page() {
     fetchApiKeys();
   }, [fetchApiKeys]);
 
+  const isValidExpirationDuration = () => {
+    if (keyType === "basic") return true;
+    const trimmed = expirationDuration.trim();
+    if (trimmed === "") return false;
+    const num = parseInt(trimmed, 10);
+    return !isNaN(num) && num > 0 && num.toString() === trimmed;
+  };
+
   const handleCreateKey = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeTeam?.id || !newKeyName.trim()) {
@@ -82,10 +104,29 @@ export default function Page() {
       return;
     }
 
+    if (keyType === "jwt" && !isValidExpirationDuration()) {
+      toast.error("Please enter a valid expiration duration");
+      return;
+    }
+
     try {
+      let expiresInSeconds: number | undefined;
+      if (keyType === "jwt") {
+        const durationNum = parseInt(expirationDuration.trim(), 10);
+        const hoursPerUnit = {
+          hours: 1,
+          days: 24,
+        };
+        expiresInSeconds = durationNum * hoursPerUnit[expirationUnit] * 60 * 60;
+      }
+
       const response = await client[":teamId"]["api-keys"].$post({
         param: { teamId: activeTeam.id },
-        json: { name: newKeyName },
+        json: {
+          name: newKeyName,
+          type: keyType,
+          expiresInSeconds,
+        },
       });
 
       const json = await response.json();
@@ -101,15 +142,28 @@ export default function Page() {
         teamId: json.apiKey.teamId,
         userId: json.apiKey.userId,
         secretHash: json.apiKey.secretHash,
+        type: json.apiKey.type,
+        expiresAt: json.apiKey.expiresAt
+          ? new Date(json.apiKey.expiresAt)
+          : null,
         createdAt: new Date(json.apiKey.createdAt),
         updatedAt: new Date(json.apiKey.updatedAt),
       };
       setApiKeys((prev) => [...prev, newApiKey]);
       setNewKeyName("");
-      setNewKey({
-        key: json.apiKey.id,
-        secret: json.apiKey.secret,
-      });
+      if (keyType === "basic" && "secret" in json.apiKey) {
+        setNewKey({
+          key: json.apiKey.id,
+          secret: json.apiKey.secret,
+          type: "basic",
+        });
+      } else if (keyType === "jwt" && "jwt" in json.apiKey && json.apiKey.expiresAt) {
+        setNewKey({
+          jwt: json.apiKey.jwt,
+          type: "jwt",
+          expiresAt: new Date(json.apiKey.expiresAt),
+        });
+      }
       toast.success("API key created successfully");
     } catch (error) {
       console.error("Error creating API key:", error);
@@ -122,6 +176,18 @@ export default function Page() {
       accessorKey: "name",
       header: ({ column }) => <ColumnHeader column={column} title="Name" />,
       cell: ({ row }) => (row.getValue("name") as string) ?? "N/A",
+    },
+    {
+      accessorKey: "type",
+      header: ({ column }) => <ColumnHeader column={column} title="Type" />,
+      cell: ({ row }) => {
+        const type = row.getValue("type") as string;
+        return (
+          <span className="uppercase font-mono text-xs">
+            {type === "jwt" ? "JWT" : "Basic"}
+          </span>
+        );
+      },
     },
     {
       accessorKey: "id",
@@ -141,6 +207,23 @@ export default function Page() {
           </Button>
         </div>
       ),
+    },
+    {
+      accessorKey: "expiresAt",
+      header: ({ column }) => (
+        <ColumnHeader column={column} title="Expires At" />
+      ),
+      cell: ({ row }) => {
+        const expiresAt = row.getValue("expiresAt") as Date | null;
+        if (!expiresAt) return "Never";
+        const isExpired = new Date(expiresAt) < new Date();
+        return (
+          <span className={isExpired ? "text-destructive font-medium" : ""}>
+            {new Date(expiresAt).toLocaleString()}
+          </span>
+        );
+      },
+      sortingFn: "datetime",
     },
     {
       accessorKey: "createdAt",
@@ -215,20 +298,72 @@ export default function Page() {
       breadcrumbs={[{ label: "User Settings" }, { label: "API Keys" }]}
     >
       <div className="space-y-6">
-        <div className="flex items-center gap-4 max-w-xl">
-          <Input
-            placeholder="New API Key Name"
-            value={newKeyName}
-            onChange={(e) => setNewKeyName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleCreateKey(e);
+        <div className="space-y-4 max-w-2xl">
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="New API Key Name"
+              value={newKeyName}
+              onChange={(e) => setNewKeyName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleCreateKey(e);
+                }
+              }}
+            />
+            <Select
+              value={keyType}
+              onValueChange={(value: "basic" | "jwt") => setKeyType(value)}
+            >
+              <SelectTrigger id="key-type">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="basic">Basic Authentication</SelectItem>
+                <SelectItem value="jwt">JWT Token</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              onClick={handleCreateKey}
+              disabled={
+                !activeTeam?.id ||
+                !newKeyName.trim() ||
+                (keyType === "jwt" && !isValidExpirationDuration())
               }
-            }}
-          />
-          <Button onClick={handleCreateKey}>Create API Key</Button>
+            >
+              Create API Key
+            </Button>
+          </div>
+          {keyType === "jwt" && (
+            <div className="space-y-2">
+              <Label htmlFor="expiration-duration">API Key Expiration in</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="expiration-duration"
+                  type="text"
+                  value={expirationDuration}
+                  onChange={(e) => setExpirationDuration(e.target.value)}
+                  placeholder="24"
+                  className="max-w-xs"
+                />
+                <Select
+                  value={expirationUnit}
+                  onValueChange={(value: "hours" | "days") =>
+                    setExpirationUnit(value)
+                  }
+                >
+                  <SelectTrigger id="expiration-unit" className="w-[120px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="hours">Hours</SelectItem>
+                    <SelectItem value="days">Days</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
         </div>
-        <div className="rounded-lg border p-4 space-y-4 max-w-xl bg-muted">
+        <div className="rounded-lg border p-4 space-y-4 max-w-2xl bg-muted">
           <div className="space-y-2">
             <h3 className="font-medium">Team ID</h3>
             <p className="text-sm text-muted-foreground">
@@ -256,7 +391,7 @@ export default function Page() {
           </div>
         </div>
         {newKey && (
-          <div className="rounded-lg border p-4 space-y-4 max-w-xl bg-muted">
+          <div className="rounded-lg border p-4 space-y-4 max-w-2xl bg-muted">
             <div className="space-y-2">
               <h3 className="font-medium">New API Key Created</h3>
               <p className="text-sm text-muted-foreground">
@@ -264,71 +399,156 @@ export default function Page() {
               </p>
             </div>
             <div className="space-y-2">
-              <div>
-                <label className="text-sm font-medium">API Key</label>
-                <div className="flex items-center gap-2">
-                  <Input value={newKey.key} readOnly className="font-mono" />
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      navigator.clipboard.writeText(newKey.key);
-                      toast.success("API Key copied to clipboard");
-                    }}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Secret</label>
-                <div className="flex items-center gap-2">
-                  <Input value={newKey.secret} readOnly className="font-mono" />
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      navigator.clipboard.writeText(newKey.secret);
-                      toast.success("Secret copied to clipboard");
-                    }}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              <Collapsible>
-                <CollapsibleTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="w-full font-normal [&[data-state=open]>svg]:rotate-180"
-                  >
-                    <label className="text-sm font-medium">
-                      View Authorization Header
-                    </label>
-                    <ChevronDown className="h-4 w-4 transition-transform duration-200" />
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="pt-2">
-                    <label className="text-sm font-medium">Authorization Header</label>
-                    <div className="flex items-center gap-2 mt-2">
+              {newKey.type === "basic" ? (
+                <>
+                  <div>
+                    <label className="text-sm font-medium">API Key</label>
+                    <div className="flex items-center gap-2">
                       <Input
-                        value={`Authorization: Basic ${btoa(`${newKey.key}:${newKey.secret}`)}`}
+                        value={newKey.key}
                         readOnly
                         className="font-mono"
                       />
                       <Button
                         variant="outline"
                         onClick={() => {
-                          const authHeader = `Authorization: Basic ${btoa(`${newKey.key}:${newKey.secret}`)}`;
-                          navigator.clipboard.writeText(authHeader);
-                          toast.success("Authorization header copied to clipboard");
+                          navigator.clipboard.writeText(newKey.key);
+                          toast.success("API Key copied to clipboard");
                         }}
                       >
                         <Copy className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
-                </CollapsibleContent>
-              </Collapsible>
+                  <div>
+                    <label className="text-sm font-medium">Secret</label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={newKey.secret}
+                        readOnly
+                        className="font-mono"
+                      />
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          navigator.clipboard.writeText(newKey.secret);
+                          toast.success("Secret copied to clipboard");
+                        }}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="w-full font-normal [&[data-state=open]>svg]:rotate-180"
+                      >
+                        <label className="text-sm font-medium">
+                          View Authorization Header
+                        </label>
+                        <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="pt-2">
+                        <label className="text-sm font-medium">
+                          Authorization Header
+                        </label>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Input
+                            value={`Authorization: Basic ${btoa(`${newKey.key}:${newKey.secret}`)}`}
+                            readOnly
+                            className="font-mono"
+                          />
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              const authHeader = `Authorization: Basic ${btoa(`${newKey.key}:${newKey.secret}`)}`;
+                              navigator.clipboard.writeText(authHeader);
+                              toast.success(
+                                "Authorization header copied to clipboard"
+                              );
+                            }}
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label className="text-sm font-medium">JWT Token</label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={newKey.jwt}
+                        readOnly
+                        className="font-mono text-xs"
+                      />
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          navigator.clipboard.writeText(newKey.jwt);
+                          toast.success("JWT token copied to clipboard");
+                        }}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Expires At</label>
+                    <Input
+                      value={newKey.expiresAt.toLocaleString()}
+                      readOnly
+                      className="font-mono"
+                    />
+                  </div>
+                  <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="w-full font-normal [&[data-state=open]>svg]:rotate-180"
+                      >
+                        <label className="text-sm font-medium">
+                          View Authorization Header
+                        </label>
+                        <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="pt-2">
+                        <label className="text-sm font-medium">
+                          Authorization Header
+                        </label>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Input
+                            value={`Authorization: Bearer ${newKey.jwt}`}
+                            readOnly
+                            className="font-mono"
+                          />
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              const authHeader = `Authorization: Bearer ${newKey.jwt}`;
+                              navigator.clipboard.writeText(authHeader);
+                              toast.success(
+                                "Authorization header copied to clipboard"
+                              );
+                            }}
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </>
+              )}
             </div>
             <Button variant="outline" onClick={() => setNewKey(null)}>
               Close

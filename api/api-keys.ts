@@ -2,7 +2,7 @@ import { zodValidator } from "@recommand/lib/zod-validator";
 import { z } from "zod";
 import { actionFailure, actionSuccess } from "@recommand/lib/utils";
 import { Server } from "@recommand/lib/api";
-import { createApiKey, deleteApiKey, getApiKeys } from "@core/data/api-keys";
+import { createApiKey, createJwtApiKey, deleteApiKey, getApiKeys } from "@core/data/api-keys";
 import { requireTeamAccess } from "@core/lib/auth-middleware";
 
 const server = new Server();
@@ -43,16 +43,28 @@ const _createApiKey = server.post(
     "json",
     z.object({
       name: z.string(),
+      type: z.enum(["basic", "jwt"]).default("basic"),
+      expiresInSeconds: z.number().min(1).optional().default(24 * 60 * 60), // 24 hours in seconds
     })
   ),
   async (c) => {
     try {
-      const apiKey = await createApiKey(
-        c.get("user").id,
-        c.get("team").id,
-        c.req.valid("json").name
-      );
-      return c.json(actionSuccess({ apiKey }));
+      if(c.req.valid("json").type === "jwt") {
+        const apiKey = await createJwtApiKey(
+          c.get("user"),
+          c.get("team").id,
+          c.req.valid("json").expiresInSeconds,
+          c.req.valid("json").name
+        );
+        return c.json(actionSuccess({ apiKey }));
+      }else{
+        const apiKey = await createApiKey(
+          c.get("user").id,
+          c.get("team").id,
+          c.req.valid("json").name
+        );
+        return c.json(actionSuccess({ apiKey }));
+      }
     } catch (error) {
       return c.json(actionFailure(error as Error), 500);
     }
