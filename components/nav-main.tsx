@@ -40,6 +40,8 @@ export function NavMain({
       <SidebarMenu>
         {items.map((item) => {
           if (item.items?.length) {
+            const hasNoAction = !item.onClick && (!item.url || item.url === "#");
+            
             return (
               <Collapsible
                 key={item.title}
@@ -49,51 +51,72 @@ export function NavMain({
               >
                 <SidebarMenuItem>
                   <div className="flex items-center">
-                    <SidebarMenuButton
-                      tooltip={item.title}
-                      asChild={!item.onClick}
-                      onClick={item.onClick}
-                      className="flex-1"
-                    >
-                      {item.onClick ? (
-                        <>
-                          {item.icon && <item.icon />}
-                          <span>{item.title}</span>
-                        </>
-                      ) : (
-                        <Link to={item.url}>
-                          {item.icon && <item.icon />}
-                          <span>{item.title}</span>
-                        </Link>
-                      )}
-                    </SidebarMenuButton>
-                    {state === "expanded" && (
+                    {hasNoAction ? (
                       <CollapsibleTrigger asChild>
-                        <button className="p-2 hover:bg-sidebar-accent rounded-md">
-                          <ChevronRight className="size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                        </button>
+                        <SidebarMenuButton
+                          tooltip={item.title}
+                          className="flex-1 cursor-pointer"
+                        >
+                          {item.icon && <item.icon />}
+                          <span>{item.title}</span>
+                          {state === "expanded" && (
+                            <ChevronRight className="ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                          )}
+                        </SidebarMenuButton>
                       </CollapsibleTrigger>
+                    ) : (
+                      <>
+                        <SidebarMenuButton
+                          tooltip={item.title}
+                          asChild={!item.onClick}
+                          onClick={item.onClick}
+                          className="flex-1"
+                        >
+                          {item.onClick ? (
+                            <>
+                              {item.icon && <item.icon />}
+                              <span>{item.title}</span>
+                            </>
+                          ) : (
+                            <Link to={item.url}>
+                              {item.icon && <item.icon />}
+                              <span>{item.title}</span>
+                            </Link>
+                          )}
+                        </SidebarMenuButton>
+                        {state === "expanded" && (
+                          <CollapsibleTrigger asChild>
+                            <button className="p-2 hover:bg-sidebar-accent rounded-md cursor-pointer">
+                              <ChevronRight className="size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                            </button>
+                          </CollapsibleTrigger>
+                        )}
+                      </>
                     )}
                   </div>
                   {state === "expanded" && (
                     <CollapsibleContent>
                       <SidebarMenuSub>
-                        {item.items.map((subItem) => (
-                          <SidebarMenuSubItem key={subItem.title}>
-                            <SidebarMenuSubButton
-                              asChild={!subItem.onClick}
-                              onClick={subItem.onClick}
-                            >
-                              {subItem.onClick ? (
-                                <span>{subItem.title}</span>
-                              ) : (
-                                <Link to={subItem.url}>
+                        {item.items.map((subItem) => {
+                          const hasAction = subItem.onClick || subItem.url !== "#";
+                          return (
+                            <SidebarMenuSubItem key={subItem.title}>
+                              <SidebarMenuSubButton
+                                asChild={!subItem.onClick}
+                                onClick={subItem.onClick}
+                                className={hasAction ? "cursor-pointer" : ""}
+                              >
+                                {subItem.onClick ? (
                                   <span>{subItem.title}</span>
-                                </Link>
-                              )}
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
+                                ) : (
+                                  <Link to={subItem.url}>
+                                    <span>{subItem.title}</span>
+                                  </Link>
+                                )}
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          );
+                        })}
                       </SidebarMenuSub>
                     </CollapsibleContent>
                   )}
