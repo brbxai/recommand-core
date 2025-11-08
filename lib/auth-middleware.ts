@@ -74,24 +74,32 @@ export function requireTeamAccess(options: TeamAccessOptions = {}) {
         return c.json(actionFailure("Unauthorized"), 401);
       }
 
-      const teamId = options.getTeamId
-        ? options.getTeamId(c)
-        : c.req.param(options.param ?? "teamId");
+      const teamIdFromRequest: string | undefined = options.getTeamId ? options.getTeamId(c) : c.req.param(options.param ?? "teamId");
+      let teamId: string | undefined;
+
+      const apiKey = c.get("apiKey");
+      if (apiKey) {
+        // If the user is authenticated via an API key, get the team ID from the API key
+        teamId = apiKey.teamId;
+      } else {
+        if (!teamIdFromRequest) {
+          return c.json(actionFailure("Team ID is required"), 400);
+        }
+
+        // If the user is not authenticated via an API key, ensure they are a member of the team
+        if (!(await isMember(user.id, teamIdFromRequest))) {
+          return c.json(actionFailure("Unauthorized"), 401);
+        }
+
+        teamId = teamIdFromRequest;
+      }
+
       if (!teamId) {
         return c.json(actionFailure("Team ID is required"), 400);
       }
 
-      const apiKey = c.get("apiKey");
-      if (apiKey) {
-        // If the user is authenticated via an API key, ensure the API key belongs to the team
-        if (apiKey.teamId !== teamId) {
-          return c.json(actionFailure("Unauthorized"), 401);
-        }
-      } else {
-        // If the user is not authenticated via an API key, ensure they are a member of the team
-        if (!(await isMember(user.id, teamId))) {
-          return c.json(actionFailure("Unauthorized"), 401);
-        }
+      if (teamIdFromRequest && teamIdFromRequest !== teamId) {
+        return c.json(actionFailure("Unauthorized: provided teamId does not match API key's teamId"), 401);
       }
 
       const team = await getTeam(teamId);
