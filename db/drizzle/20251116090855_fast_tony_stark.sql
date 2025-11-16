@@ -1,0 +1,1 @@
+ALTER TABLE "teams" RENAME COLUMN "client_assertion_pem" TO "client_assertion_jwks";

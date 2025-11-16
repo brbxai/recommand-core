@@ -120,18 +120,6 @@ export async function verifySession(c: Context): Promise<{
         result = { userId: apiKey.user.id, isAdmin: apiKey.user.isAdmin, apiKey: apiKey.apiKey };
       }
     }
-  } 
-  if (!result) {
-    // We will try basic auth next
-    const basicAuth = c.req.header("Authorization")?.split(" ")[1];
-    if (basicAuth) {
-      const credentials = Buffer.from(basicAuth, "base64").toString("utf-8");
-      const [username, password] = credentials.split(":");
-      const userInfo = await checkBasicAuth(username, password);
-      if (userInfo.user) {
-        result = { userId: userInfo.user.id, isAdmin: userInfo.user.isAdmin, apiKey: undefined };
-      }
-    }
   }
 
   if (!result) return null;

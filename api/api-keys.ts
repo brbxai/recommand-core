@@ -2,7 +2,7 @@ import { zodValidator } from "@recommand/lib/zod-validator";
 import { z } from "zod";
 import { actionFailure, actionSuccess } from "@recommand/lib/utils";
 import { Server } from "@recommand/lib/api";
-import { createApiKey, createJwtApiKey, deleteApiKey, getApiKeys } from "@core/data/api-keys";
+import { createApiKey, deleteApiKey, getApiKeys, isApiKeyCreationPermitted } from "@core/data/api-keys";
 import { requireTeamAccess } from "@core/lib/auth-middleware";
 
 const server = new Server();
@@ -21,10 +21,10 @@ const _getApiKeys = server.get(
       const apiKeys = await getApiKeys(c.var.user.id, c.var.team.id);
       return c.json(
         actionSuccess({
-        apiKeys,
-      })
-    );
-  } catch (error) {
+          apiKeys,
+        })
+      );
+    } catch (error) {
       return c.json(actionFailure(error as Error), 500);
     }
   }
@@ -49,25 +49,33 @@ const _createApiKey = server.post(
   ),
   async (c) => {
     try {
-      if(c.req.valid("json").type === "jwt") {
-        const apiKey = await createJwtApiKey(
-          c.get("user"),
-          c.get("team").id,
-          c.req.valid("json").expiresInSeconds,
-          c.req.valid("json").name
-        );
-        return c.json(actionSuccess({ apiKey }));
-      }else{
-        const apiKey = await createApiKey(
-          c.get("user").id,
-          c.get("team").id,
-          c.req.valid("json").name
-        );
-        return c.json(actionSuccess({ apiKey }));
-      }
+      const apiKey = await createApiKey({
+        user: c.var.user,
+        teamId: c.var.team.id,
+        name: c.req.valid("json").name,
+        type: c.req.valid("json").type,
+        expiresInSeconds: c.req.valid("json").expiresInSeconds,
+      });
+      return c.json(actionSuccess({ apiKey }));
     } catch (error) {
       return c.json(actionFailure(error as Error), 500);
     }
+  }
+);
+
+const _isApiKeyCreationEnabled = server.get(
+  "/:teamId/api-keys/is-creation-permitted",
+  requireTeamAccess(),
+  zodValidator(
+    "param",
+    z.object({
+      teamId: z.string(),
+    })
+  ),
+  async (c) => {
+    return c.json(actionSuccess({
+      isPermitted: await isApiKeyCreationPermitted(c.var.team.id),
+    }))
   }
 );
 
@@ -94,6 +102,7 @@ const _deleteApiKey = server.delete(
 export type ApiKeys =
   | typeof _getApiKeys
   | typeof _createApiKey
-  | typeof _deleteApiKey;
+  | typeof _deleteApiKey
+  | typeof _isApiKeyCreationEnabled;
 
 export default server;

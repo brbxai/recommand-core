@@ -1,0 +1,1 @@
+ALTER TABLE "teams" ADD COLUMN "client_assertion_pem" text;

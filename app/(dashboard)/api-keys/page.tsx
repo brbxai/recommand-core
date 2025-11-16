@@ -17,7 +17,7 @@ import { toast } from "@core/components/ui/sonner";
 import { stringifyActionFailure } from "@recommand/lib/utils";
 import type { ApiKey } from "@core/data/api-keys";
 import { useActiveTeam } from "@core/hooks/user";
-import { Trash2, Loader2, Copy, ChevronDown } from "lucide-react";
+import { Trash2, Loader2, Copy, ChevronDown, AlertCircle } from "lucide-react";
 import { ColumnHeader } from "@core/components/data-table/column-header";
 import {
   Collapsible,
@@ -31,6 +31,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@core/components/ui/select";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@core/components/ui/alert";
 
 const client = rc<ApiKeys>("core");
 
@@ -47,6 +52,7 @@ export default function Page() {
     | null
   >(null);
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [isCreationPermitted, setIsCreationPermitted] = useState<boolean | null>(null);
   const activeTeam = useActiveTeam();
 
   const fetchApiKeys = useCallback(async () => {
@@ -84,10 +90,28 @@ export default function Page() {
       setIsLoading(false);
     }
   }, [activeTeam?.id]);
+  
+  const checkCreationPermission = useCallback(async () => {
+    if (!activeTeam?.id) {
+      setIsCreationPermitted(false);
+      return;
+    }
+    try {
+      const response = await client[":teamId"]["api-keys"]["is-creation-permitted"].$get({
+        param: { teamId: activeTeam.id },
+      });
+      const json = await response.json();
+      setIsCreationPermitted(json.success && json.isPermitted);
+    } catch (error) {
+      console.error("Error checking API key creation permission:", error);
+      setIsCreationPermitted(false);
+    }
+  }, [activeTeam?.id]);
 
   useEffect(() => {
     fetchApiKeys();
-  }, [fetchApiKeys]);
+    checkCreationPermission();
+  }, [fetchApiKeys, checkCreationPermission]);
 
   const isValidExpirationDuration = () => {
     if (keyType === "basic") return true;
@@ -132,7 +156,7 @@ export default function Page() {
       const json = await response.json();
       if (!json.success) {
         throw new Error(
-          "Invalid response format: " + stringifyActionFailure(json.errors)
+          "Could not create API key: " + stringifyActionFailure(json.errors)
         );
       }
 
@@ -165,9 +189,8 @@ export default function Page() {
         });
       }
       toast.success("API key created successfully");
-    } catch (error) {
-      console.error("Error creating API key:", error);
-      toast.error("Failed to create API key");
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 
@@ -298,71 +321,81 @@ export default function Page() {
       breadcrumbs={[{ label: "User Settings" }, { label: "API Keys" }]}
     >
       <div className="space-y-6">
-        <div className="space-y-4 max-w-2xl">
-          <div className="flex items-center gap-2">
-            <Input
-              placeholder="New API Key Name"
-              value={newKeyName}
-              onChange={(e) => setNewKeyName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleCreateKey(e);
-                }
-              }}
-            />
-            <Select
-              value={keyType}
-              onValueChange={(value: "basic" | "jwt") => setKeyType(value)}
-            >
-              <SelectTrigger id="key-type">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="basic">Basic Authentication</SelectItem>
-                <SelectItem value="jwt">JWT Token</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button
-              onClick={handleCreateKey}
-              disabled={
-                !activeTeam?.id ||
-                !newKeyName.trim() ||
-                (keyType === "jwt" && !isValidExpirationDuration())
-              }
-            >
-              Create API Key
-            </Button>
-          </div>
-          {keyType === "jwt" && (
-            <div className="space-y-2">
-              <Label htmlFor="expiration-duration">API Key Expiration in</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="expiration-duration"
-                  type="text"
-                  value={expirationDuration}
-                  onChange={(e) => setExpirationDuration(e.target.value)}
-                  placeholder="24"
-                  className="max-w-xs"
-                />
-                <Select
-                  value={expirationUnit}
-                  onValueChange={(value: "hours" | "days") =>
-                    setExpirationUnit(value)
+        {isCreationPermitted === false ? (
+          <Alert variant="default" className="max-w-2xl">
+            <AlertCircle />
+            <AlertTitle>API Key Creation Not Available</AlertTitle>
+            <AlertDescription>
+              API key creation is currently restricted for security reasons. When the JWT-based token flow with assertion is enabled, keys can only be created via the API using a signed JWT assertion. Contact support if you have any questions.
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <div className="space-y-4 max-w-2xl">
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="New API Key Name"
+                value={newKeyName}
+                onChange={(e) => setNewKeyName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleCreateKey(e);
                   }
-                >
-                  <SelectTrigger id="expiration-unit" className="w-[120px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="hours">Hours</SelectItem>
-                    <SelectItem value="days">Days</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                }}
+              />
+              <Select
+                value={keyType}
+                onValueChange={(value: "basic" | "jwt") => setKeyType(value)}
+              >
+                <SelectTrigger id="key-type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="basic">Basic Authentication</SelectItem>
+                  <SelectItem value="jwt">JWT Token</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                onClick={handleCreateKey}
+                disabled={
+                  !activeTeam?.id ||
+                  !newKeyName.trim() ||
+                  (keyType === "jwt" && !isValidExpirationDuration())
+                }
+              >
+                Create API Key
+              </Button>
             </div>
-          )}
-        </div>
+            {keyType === "jwt" && (
+              <div className="space-y-2">
+                <Label htmlFor="expiration-duration">API Key Expiration in</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="expiration-duration"
+                    type="text"
+                    value={expirationDuration}
+                    onChange={(e) => setExpirationDuration(e.target.value)}
+                    placeholder="24"
+                    className="max-w-xs"
+                  />
+                  <Select
+                    value={expirationUnit}
+                    onValueChange={(value: "hours" | "days") =>
+                      setExpirationUnit(value)
+                    }
+                  >
+                    <SelectTrigger id="expiration-unit" className="w-[120px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="hours">Hours</SelectItem>
+                      <SelectItem value="days">Days</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         <div className="rounded-lg border p-4 space-y-4 max-w-2xl bg-muted">
           <div className="space-y-2">
             <h3 className="font-medium">Team ID</h3>

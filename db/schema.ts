@@ -32,6 +32,7 @@ export const teams = pgTable("teams", {
     .$defaultFn(() => "team_" + ulid()),
   name: text("name").notNull(),
   teamDescription: text("team_description").notNull().default("-"),
+  clientAssertionJwks: text("client_assertion_jwks"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: autoUpdateTimestamp(),
 });

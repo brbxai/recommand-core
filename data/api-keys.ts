@@ -1,4 +1,4 @@
-import { apiKeys, users } from "@core/db/schema";
+import { apiKeys, teams, users } from "@core/db/schema";
 import { db } from "@recommand/db";
 import { and, eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
@@ -26,7 +26,47 @@ export async function getApiKey(apiKeyId: string) {
     return res[0];
 }
 
-export async function createApiKey(userId: string, teamId: string, name: string) {
+export async function isApiKeyCreationPermitted(teamId: string) {
+    const team = await db.select({ clientAssertionJwks: teams.clientAssertionJwks }).from(teams).where(eq(teams.id, teamId));
+    if (team.length === 0 || team[0].clientAssertionJwks) {
+        return false;
+    }
+    return true;
+}
+
+export async function createApiKey({
+    user,
+    teamId,
+    name,
+    type,
+    expiresInSeconds,
+}: {
+    user: { id: string; isAdmin: boolean },
+    teamId: string,
+    name: string,
+    type: "basic" | "jwt",
+    expiresInSeconds?: number,
+}) {
+
+    // First check if client assertion is enabled for the team, then we won't allow creating API keys
+    const isEnabled = await isApiKeyCreationPermitted(teamId);
+    if (!isEnabled) {
+        throw new Error("Client assertion is enabled for this team. API key creation is disabled.");
+    }
+
+    if (type === "jwt") {
+        return await createJwtApiKey({
+          user,
+          teamId,
+          expiresInSeconds,
+          name,
+        });
+    } else {
+        return await createBasicApiKey(user.id, teamId, name);
+    }
+}
+
+export async function createBasicApiKey(userId: string, teamId: string, name: string) {
     const secret = crypto.randomUUID();
     const readableSecret = "secret_" + secret.replace(/-/g, "");
     const secretHash = await bcrypt.hash(readableSecret, 10);
@@ -43,8 +83,18 @@ export async function createApiKey(userId: string, teamId: string, name: string)
     
 }
 
-export async function createJwtApiKey(user: { id: string; isAdmin: boolean }, teamId: string, expiresInSeconds: number, name: string) {
-    const expires = addSeconds(new Date(), expiresInSeconds);
+export async function createJwtApiKey({user, teamId, expiresInSeconds, expirationDate, name}: {
+    user: { id: string; isAdmin: boolean },
+    teamId: string,
+    expiresInSeconds?: number,
+    expirationDate?: Date,
+    name: string,
+}) {
+    if(!expiresInSeconds && !expirationDate){
+        throw new Error("expiresInSeconds or expirationDate must be provided to createJwtApiKey");
+    }
+
+    const expires = expirationDate ?? addSeconds(new Date(), expiresInSeconds!);
     const id = "key_" + ulid();
     const jwt = await sign({
         sub: user.id,
