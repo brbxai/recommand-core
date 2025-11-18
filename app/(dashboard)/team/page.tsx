@@ -157,6 +157,34 @@ export default function Page() {
       cell: ({ row }) => row.original.user.email ?? "N/A",
     },
     {
+      accessorKey: "user.id",
+      header: ({ column }) => <ColumnHeader column={column} title="User ID" />,
+      cell: ({ row }) => {
+        const userId = row.original.user.id;
+        if (!userId) return <div className="text-muted-foreground">N/A</div>;
+        
+        return (
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-xs">
+              {userId.length > 12
+                ? `${userId.slice(0, 6)}...${userId.slice(-6)}`
+                : userId}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                navigator.clipboard.writeText(userId);
+                toast.success("User ID copied to clipboard");
+              }}
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+          </div>
+        );
+      },
+    },
+    {
       accessorKey: "user.emailVerified",
       header: ({ column }) => <ColumnHeader column={column} title="Verified" />,
       cell: ({ row }) => (
