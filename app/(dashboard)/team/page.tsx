@@ -152,13 +152,9 @@ export default function Page() {
 
   const columns: ColumnDef<MinimalTeamMember>[] = [
     {
-      accessorKey: "user.email",
-      header: ({ column }) => <ColumnHeader column={column} title="Email" />,
-      cell: ({ row }) => row.original.user.email ?? "N/A",
-    },
-    {
       accessorKey: "user.id",
       header: ({ column }) => <ColumnHeader column={column} title="User ID" />,
+      size: 200,
       cell: ({ row }) => {
         const userId = row.original.user.id;
         if (!userId) return <div className="text-muted-foreground">N/A</div>;
@@ -183,6 +179,11 @@ export default function Page() {
           </div>
         );
       },
+    },
+    {
+      accessorKey: "user.email",
+      header: ({ column }) => <ColumnHeader column={column} title="Email" />,
+      cell: ({ row }) => row.original.user.email ?? "N/A",
     },
     {
       accessorKey: "user.emailVerified",
