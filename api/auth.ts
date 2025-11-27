@@ -154,7 +154,11 @@ const me = server.get("/auth/me", requireAuth(), async (c) => {
 
 const teams = server.get("/auth/teams", requireAuth(), async (c) => {
   try {
-    const teams = await getUserTeams(c.get("user").id);
+    const userId = c.get("user")?.id;
+    if (!userId) {
+      return c.json(actionFailure("Unauthorized"), 401);
+    }
+    const teams = await getUserTeams(userId);
     return c.json(actionSuccess({ data: teams }));
   } catch (e) {
     console.error(e);
@@ -176,7 +180,9 @@ const createTeamEndpoint = server.post(
     try {
       const data = c.req.valid("json");
       const user = c.get("user");
-
+      if (!user?.id) {
+        return c.json(actionFailure("Unauthorized"), 401);
+      }
       const team = await createTeam(user.id, {
         name: data.name,
         teamDescription: data.teamDescription,

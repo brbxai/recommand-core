@@ -1,6 +1,6 @@
 import type { Context } from "hono";
 import { createMiddleware } from "hono/factory";
-import { verifySession } from "./session";
+import { verifySession, type SessionVerificationExtension } from "./session";
 import { actionFailure } from "@recommand/lib/utils";
 import { getTeam, isMember, type Team } from "@core/data/teams";
 
@@ -9,12 +9,9 @@ export type AuthenticatedUserContext = {
     user: {
       id: string;
       isAdmin: boolean;
-    };
-    team: Team | undefined;
-    apiKey?: {
-      id: string;
-      teamId: string;
-    };
+    } | null;
+    team: Team | null;
+    teamId: string | null;
   };
 };
 
@@ -57,33 +54,32 @@ export function requireAdmin() {
   });
 }
 
-type TeamAccessOptions = {
+export type TeamAccessOptions = {
   param?: string;
   getTeamId?: (c: Context) => string;
+  extensions?: SessionVerificationExtension[];
 };
 
 export function requireTeamAccess(options: TeamAccessOptions = {}) {
   return createMiddleware<AuthenticatedUserContext & AuthenticatedTeamContext>(
     async (c, next) => {
       // Verify user's session
-      await verifySession(c);
-
-      // Get user from context
-      const user: { id: string; isAdmin: boolean } | null = c.get("user");
-      if (!user?.id) {
+      const session = await verifySession(c, options.extensions);
+      if(!session) {
         return c.json(actionFailure("Unauthorized"), 401);
       }
 
       const teamIdFromRequest: string | undefined = options.getTeamId ? options.getTeamId(c) : c.req.param(options.param ?? "teamId");
-      let teamId: string | undefined;
-
-      const apiKey = c.get("apiKey");
-      if (apiKey) {
-        // If the user is authenticated via an API key, get the team ID from the API key
-        teamId = apiKey.teamId;
-      } else {
+      let teamId: string | null = c.get("teamId");
+      if (!teamId) {
         if (!teamIdFromRequest) {
           return c.json(actionFailure("Team ID is required"), 400);
+        }
+
+        // Get user from context
+        const user: { id: string; isAdmin: boolean } | null = c.get("user");
+        if (!user?.id) {
+          return c.json(actionFailure("Unauthorized"), 401);
         }
 
         // If the user is not authenticated via an API key, ensure they are a member of the team
