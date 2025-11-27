@@ -21,10 +21,14 @@ export type AuthenticatedTeamContext = {
   };
 };
 
-export function requireAuth() {
+export type AuthOptions = {
+  extensions?: SessionVerificationExtension[];
+};
+
+export function requireAuth(options: AuthOptions = {}) {
   return createMiddleware<AuthenticatedUserContext>(async (c, next) => {
     // Verify user's session
-    const session = await verifySession(c);
+    const session = await verifySession(c, options.extensions);
     // Fetch user data
     if (!session?.userId) {
       return c.json(actionFailure("Unauthorized"), 401);
