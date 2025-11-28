@@ -53,11 +53,11 @@ export async function verifySession(c: Context, extensions: SessionVerificationE
   isAdmin: boolean;
   apiKey: ApiKey | null;
 } | null> {
-  
+
   if (!process.env.JWT_SECRET) {
     throw new Error("JWT_SECRET is not set");
   }
-  
+
   let result: { userId: string | null; isAdmin: boolean; apiKey: ApiKey | null; teamId: string | null } | null = null;
 
   const verificationMethods = [
@@ -68,10 +68,14 @@ export async function verifySession(c: Context, extensions: SessionVerificationE
   ]
 
   for (const method of verificationMethods) {
-    const methodResult = await method(c);
-    if (methodResult) {
-      result = methodResult;
-      break; // Stop checking other extensions if one is successful
+    try {
+      const methodResult = await method(c);
+      if (methodResult) {
+        result = methodResult;
+        break; // Stop checking other extensions if one is successful
+      }
+    } catch (error) {
+      console.error(`Error verifying session with method ${method.name}: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
