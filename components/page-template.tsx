@@ -23,6 +23,7 @@ interface PageProps {
   style?: React.CSSProperties;
   buttons?: React.ReactNode[];
   description?: string;
+  title?: React.ReactNode;
 }
 
 export function PageTemplate({
@@ -33,6 +34,7 @@ export function PageTemplate({
   style,
   buttons,
   description,
+  title,
 }: PageProps) {
   return (
     <SidebarInset className={className} style={style}>
@@ -81,7 +83,7 @@ export function PageTemplate({
         {breadcrumbs.length > 0 && (
           <div className="px-4">
             <h2 className="text-2xl font-semibold">
-              {breadcrumbs[breadcrumbs.length - 1].label || "..."}
+              {title !== undefined ? title : breadcrumbs[breadcrumbs.length - 1].label || "..."}
             </h2>
             {description && (
               <p className="text-muted-foreground text-sm text-balance max-w-lg mt-1">
