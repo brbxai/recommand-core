@@ -58,10 +58,11 @@ export async function isTeamMember(teamId: string, userId: string): Promise<bool
 }
 
 export async function getUserByEmail(email: string) {
+  const normalizedEmail = email.toLowerCase().trim();
   const result = await db
     .select()
     .from(users)
-    .where(eq(users.email, email))
+    .where(eq(users.email, normalizedEmail))
     .limit(1);
   
   return result.length > 0 ? result[0] : null;

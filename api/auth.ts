@@ -207,6 +207,7 @@ const requestPasswordReset = server.post(
   async (c) => {
     try {
       const { email } = c.req.valid("json");
+      const normalizedEmail = email.toLowerCase().trim();
 
       // Find user
       const matchingUsers = await db
@@ -215,7 +216,7 @@ const requestPasswordReset = server.post(
           email: users.email,
         })
         .from(users)
-        .where(eq(users.email, email));
+        .where(eq(users.email, normalizedEmail));
 
       const user = matchingUsers[0];
       if (!user) {
@@ -238,7 +239,7 @@ const requestPasswordReset = server.post(
       // Send reset email
       const resetLink = `${process.env.BASE_URL}/reset-password/${resetToken}`;
       await sendEmail({
-        to: email,
+        to: normalizedEmail,
         subject: "Reset your Recommand password",
         email: PasswordResetEmail({
           firstName: "there", // Since we don't have firstName in the schema
@@ -331,6 +332,7 @@ const resendConfirmationEmail = server.post(
   async (c) => {
     try {
       const { email } = c.req.valid("json");
+      const normalizedEmail = email.toLowerCase().trim();
 
       // Find user
       const matchingUsers = await db
@@ -340,7 +342,7 @@ const resendConfirmationEmail = server.post(
           emailVerified: users.emailVerified,
         })
         .from(users)
-        .where(eq(users.email, email));
+        .where(eq(users.email, normalizedEmail));
 
       const user = matchingUsers[0];
       if (!user) {
@@ -372,7 +374,7 @@ const resendConfirmationEmail = server.post(
       // Send confirmation email
       const confirmationUrl = `${process.env.BASE_URL}/email-confirmation/${verificationToken}`;
       await sendEmail({
-        to: email,
+        to: normalizedEmail,
         subject: "Confirm your email address",
         email: SignupEmailConfirmation({
           firstName: "there", // Since we don't have firstName in the schema

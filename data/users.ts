@@ -47,13 +47,14 @@ export const createUser = async (userInfo: {
   email: string;
   password: string;
 }) => {
+  const normalizedEmail = userInfo.email.toLowerCase().trim();
   // Check if user already exists
   const existingUsers = await db
     .select({
       id: users.id,
     })
     .from(users)
-    .where(eq(users.email, userInfo.email));
+    .where(eq(users.email, normalizedEmail));
   if (existingUsers.length > 0) {
     throw new Error("User already exists");
   }
@@ -64,7 +65,7 @@ export const createUser = async (userInfo: {
   const [user] = await db
     .insert(users)
     .values({
-      email: userInfo.email,
+      email: normalizedEmail,
       passwordHash: hashedPassword,
     })
     .returning({ id: users.id, isAdmin: users.isAdmin });
@@ -73,6 +74,7 @@ export const createUser = async (userInfo: {
 };
 
 export const createUserForInvitation = async (email: string) => {
+  const normalizedEmail = email.toLowerCase().trim();
   // Check if user already exists
   const existingUsers = await db
     .select({
@@ -81,7 +83,7 @@ export const createUserForInvitation = async (email: string) => {
       emailVerified: users.emailVerified,
     })
     .from(users)
-    .where(eq(users.email, email));
+    .where(eq(users.email, normalizedEmail));
   if (existingUsers.length > 0) {
     return existingUsers[0];
   }
@@ -103,6 +105,7 @@ export const createUserForInvitation = async (email: string) => {
 };
 
 export const checkBasicAuth = async (username: string, password: string) => {
+  const normalizedUsername = username.toLowerCase();
   const user = await db
     .select({
       id: users.id,
@@ -111,7 +114,7 @@ export const checkBasicAuth = async (username: string, password: string) => {
       emailVerified: users.emailVerified,
     })
     .from(users)
-    .where(eq(users.email, username));
+    .where(eq(users.email, normalizedUsername));
 
   if (user.length === 0) {
     return {
