@@ -19,17 +19,7 @@ import type { MinimalTeamMember } from "@core/data/team-members";
 import { useActiveTeam } from "@core/hooks/user";
 import { Trash2, Loader2, Copy } from "lucide-react";
 import { ColumnHeader } from "@core/components/data-table/column-header";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@core/components/ui/alert-dialog";
+import { ConfirmDialog } from "@core/components/confirm-dialog";
 import { useNavigate } from "react-router";
 import { useUserStore } from "@core/lib/user-store";
 
@@ -270,8 +260,14 @@ export default function Page() {
     <PageTemplate
       breadcrumbs={[{ label: "User Settings" }, { label: "Team" }]}
       buttons={[
-        <AlertDialog key="delete-team-dialog">
-          <AlertDialogTrigger asChild>
+        <ConfirmDialog
+          key="delete-team-dialog"
+          title="Delete Team"
+          description={`Are you sure you want to delete the team "${activeTeam?.name}"? This action cannot be undone. All team members, API keys, and associated data will be permanently removed.`}
+          confirmButtonText="Delete Team"
+          onConfirm={handleDeleteTeam}
+          isLoading={isDeletingTeam}
+          trigger={
             <Button variant="destructive" disabled={isDeletingTeam}>
               {isDeletingTeam ? (
                 <>
@@ -285,34 +281,8 @@ export default function Page() {
                 </>
               )}
             </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Team</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete the team "{activeTeam?.name}"? This action cannot be undone. 
-                All team members, API keys, and associated data will be permanently removed.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={isDeletingTeam}>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDeleteTeam}
-                disabled={isDeletingTeam}
-                className="bg-destructive hover:bg-destructive/90"
-              >
-                {isDeletingTeam ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Deleting...
-                  </>
-                ) : (
-                  "Delete Team"
-                )}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>,
+          }
+        />,
       ]}
     >
       <div className="space-y-6">
