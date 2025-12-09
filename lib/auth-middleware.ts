@@ -98,8 +98,13 @@ export function requireTeamAccess(options: TeamAccessOptions = {}) {
         return c.json(actionFailure("Team ID is required"), 400);
       }
 
-      if (teamIdFromRequest && teamIdFromRequest !== teamId) {
+      if (teamIdFromRequest && teamIdFromRequest !== teamId && c.var.user?.isAdmin !== true) {
         return c.json(actionFailure("Unauthorized: provided teamId does not match API key's teamId"), 401);
+      }
+
+      if(c.var.user?.isAdmin === true && teamIdFromRequest && teamIdFromRequest !== teamId) {
+        // If the user is an admin, allow them to access the team even if the provided teamId does not match the API key's teamId
+        teamId = teamIdFromRequest;
       }
 
       const team = await getTeam(teamId);
