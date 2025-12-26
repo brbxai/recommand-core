@@ -5,6 +5,7 @@ const DARK_GRAY = "#9D9D91";
 const SHADOW = "#BFBDAE";
 const FILES = "#DEDACD";
 const PAPER = "#EEE8DD";
+const SHEET_LIGHT = "#FBFAF8";
 const SHEET = "#F7F5F2";
 const ERROR = "#E27D4B";
 const DATA = "#F7DB78";
@@ -19,6 +20,7 @@ export {
   SHADOW,
   FILES,
   PAPER,
+  SHEET_LIGHT,
   SHEET,
   ERROR,
   DATA,
