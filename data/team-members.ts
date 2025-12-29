@@ -1,4 +1,5 @@
-import { teamMembers, users, teams } from "@core/db/schema";
+import { teamMembers, users } from "@core/db/schema";
+import { emitBackendEvent, CORE_BACKEND_EVENTS } from "@core/lib/backend-events";
 import { db } from "@recommand/db";
 import { and, eq } from "drizzle-orm";
 
@@ -35,16 +36,20 @@ export async function getMinimalTeamMembers(teamId: string): Promise<MinimalTeam
 }
 
 export async function addTeamMember(teamId: string, userId: string) {
-  return await db
+  const res = await db
     .insert(teamMembers)
     .values({ teamId, userId })
     .returning();
+  await emitBackendEvent(CORE_BACKEND_EVENTS.TEAM_MEMBER_ADDED, { teamId, userId });
+  return res;
 }
 
 export async function removeTeamMember(teamId: string, userId: string) {
-  return await db
+  const res = await db
     .delete(teamMembers)
     .where(and(eq(teamMembers.teamId, teamId), eq(teamMembers.userId, userId)));
+  await emitBackendEvent(CORE_BACKEND_EVENTS.TEAM_MEMBER_REMOVED, { teamId, userId });
+  return res;
 }
 
 export async function isTeamMember(teamId: string, userId: string): Promise<boolean> {

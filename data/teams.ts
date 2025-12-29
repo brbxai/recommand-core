@@ -1,4 +1,5 @@
-import { teamMembers, teams, users } from "@core/db/schema";
+import { teamMembers, teams } from "@core/db/schema";
+import { emitBackendEvent, CORE_BACKEND_EVENTS } from "@core/lib/backend-events";
 import { db } from "@recommand/db";
 import { and, count, eq } from "drizzle-orm";
 
@@ -28,6 +29,8 @@ export async function createTeam(
       userId,
       teamId: newTeam.id,
     });
+    await emitBackendEvent(CORE_BACKEND_EVENTS.TEAM_CREATED, newTeam);
+    await emitBackendEvent(CORE_BACKEND_EVENTS.TEAM_MEMBER_ADDED, { teamId: newTeam.id, userId });
     return newTeam;
   });
 }
@@ -53,5 +56,7 @@ export async function updateTeam(
 }
 
 export async function deleteTeam(teamId: string) {
-  return await db.delete(teams).where(eq(teams.id, teamId));
+  const deletedTeam = await db.delete(teams).where(eq(teams.id, teamId));
+  await emitBackendEvent(CORE_BACKEND_EVENTS.TEAM_DELETED, { teamId });
+  return deletedTeam;
 }
