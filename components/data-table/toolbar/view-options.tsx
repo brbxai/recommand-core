@@ -40,6 +40,7 @@ export function DataTableViewOptions<TData>({
               typeof column.accessorFn !== "undefined" && column.getCanHide()
           )
           .map((column) => {
+            const displayName = (column.columnDef.meta as { label?: string })?.label ?? column.id;
             return (
               <DropdownMenuCheckboxItem
                 key={column.id}
@@ -47,7 +48,7 @@ export function DataTableViewOptions<TData>({
                 checked={column.getIsVisible()}
                 onCheckedChange={(value) => column.toggleVisibility(!!value)}
               >
-                <span className="truncate">{column.id}</span>
+                <span className="truncate">{displayName}</span>
               </DropdownMenuCheckboxItem>
             );
           })}
