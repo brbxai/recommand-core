@@ -43,7 +43,7 @@
   --accent: var(--folder);
   --accent-foreground: var(--darkslate);
   --destructive: var(--error);
-  --destructive-foreground: var(--sheet);
+  --destructive-foreground: var(--darkslate);
   --border: var(--shadow);
   --input: var(--files);
   --ring: var(--darkgray);
