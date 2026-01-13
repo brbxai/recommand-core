@@ -32,6 +32,8 @@ const websiteUrl = "https://recommand.eu";
 
 export const Head = () => (
   <ReactEmailHead>
+    <meta name="color-scheme" content="light" />
+    <meta name="supported-color-schemes" content="light" />
     <Font
       fontFamily="Rethink Sans"
       fontWeight={400}
