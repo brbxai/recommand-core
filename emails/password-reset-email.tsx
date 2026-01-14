@@ -44,3 +44,5 @@ PasswordResetEmail.PreviewProps = {
 } as PasswordResetEmailProps;
 
 export default PasswordResetEmail;
+
+export const subject = () => "Reset your Recommand password";

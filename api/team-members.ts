@@ -6,7 +6,7 @@ import { getMinimalTeamMembers, addTeamMember, removeTeamMember, getUserByEmail,
 import { requireTeamAccess } from "@core/lib/auth-middleware";
 import { createUserForInvitation } from "@core/data/users";
 import { sendEmail } from "@core/lib/email";
-import { TeamInvitationEmail } from "@core/emails/team-invitation-email";
+import { getEmailTemplate } from "@core/emails";
 import { randomBytes } from "crypto";
 import { db } from "@recommand/db";
 import { users } from "@core/db/schema";
@@ -99,14 +99,12 @@ const _addTeamMember = server.post(
 
         // Send invitation email
         const resetLink = `${process.env.BASE_URL}/reset-password/${resetToken}`;
+        const invitationEmail = await getEmailTemplate("team-invitation-email");
+        const emailProps = { firstName: "there", teamName: team.name, resetPasswordLink: resetLink };
         await sendEmail({
           to: user.email,
-          subject: `You've been invited to join ${team.name} on Recommand`,
-          email: TeamInvitationEmail({
-            firstName: "there",
-            teamName: team.name,
-            resetPasswordLink: resetLink,
-          }),
+          subject: invitationEmail.subject(emailProps),
+          email: invitationEmail.render(emailProps),
         });
       }
 

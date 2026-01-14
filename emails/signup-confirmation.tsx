@@ -36,3 +36,5 @@ SignupEmailConfirmation.PreviewProps = {
 } as EmailConfirmationProps;
 
 export default SignupEmailConfirmation;
+
+export const subject = () => "Confirm your email address";

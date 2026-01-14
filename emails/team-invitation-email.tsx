@@ -48,3 +48,6 @@ TeamInvitationEmail.PreviewProps = {
 } as TeamInvitationEmailProps;
 
 export default TeamInvitationEmail;
+
+export const subject = (props: { teamName: string }) =>
+  `You've been invited to join ${props.teamName} on Recommand`;

@@ -12,8 +12,7 @@ import { createTeam, getUserTeams, updateTeam, deleteTeam } from "@core/data/tea
 import { requireAuth, requireTeamAccess } from "@core/lib/auth-middleware";
 import { getCompletedOnboardingSteps } from "@core/data/onboarding";
 import { sendEmail } from "@core/lib/email";
-import { PasswordResetEmail } from "@core/emails/password-reset-email";
-import { SignupEmailConfirmation } from "@core/emails/signup-confirmation";
+import { getEmailTemplate } from "@core/emails";
 import { randomBytes } from "crypto";
 import { describeRoute } from "hono-openapi";
 
@@ -94,13 +93,12 @@ const signup = server.post(
 
       // Send confirmation email
       const confirmationUrl = `${process.env.BASE_URL}/email-confirmation/${verificationToken}`;
+      const signupEmail = await getEmailTemplate("signup-confirmation");
+      const emailProps = { firstName: "there", confirmationUrl };
       await sendEmail({
         to: data.email,
-        subject: "Confirm your email address",
-        email: SignupEmailConfirmation({
-          firstName: "there", // Since we don't have firstName in the schema
-          confirmationUrl,
-        }),
+        subject: signupEmail.subject(emailProps),
+        email: signupEmail.render(emailProps),
       });
 
       return c.json(
@@ -238,13 +236,12 @@ const requestPasswordReset = server.post(
 
       // Send reset email
       const resetLink = `${process.env.BASE_URL}/reset-password/${resetToken}`;
+      const passwordResetEmail = await getEmailTemplate("password-reset-email");
+      const resetEmailProps = { firstName: "there", resetPasswordLink: resetLink };
       await sendEmail({
         to: normalizedEmail,
-        subject: "Reset your Recommand password",
-        email: PasswordResetEmail({
-          firstName: "there", // Since we don't have firstName in the schema
-          resetPasswordLink: resetLink,
-        }),
+        subject: passwordResetEmail.subject(resetEmailProps),
+        email: passwordResetEmail.render(resetEmailProps),
       });
 
       return c.json(actionSuccess());
@@ -373,13 +370,12 @@ const resendConfirmationEmail = server.post(
 
       // Send confirmation email
       const confirmationUrl = `${process.env.BASE_URL}/email-confirmation/${verificationToken}`;
+      const signupEmail = await getEmailTemplate("signup-confirmation");
+      const emailProps = { firstName: "there", confirmationUrl };
       await sendEmail({
         to: normalizedEmail,
-        subject: "Confirm your email address",
-        email: SignupEmailConfirmation({
-          firstName: "there", // Since we don't have firstName in the schema
-          confirmationUrl,
-        }),
+        subject: signupEmail.subject(emailProps),
+        email: signupEmail.render(emailProps),
       });
 
       return c.json(
