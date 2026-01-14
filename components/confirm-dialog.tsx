@@ -64,7 +64,7 @@ export function ConfirmDialog({
             disabled={isLoading}
             className={
               variant === "destructive"
-                ? "bg-destructive hover:bg-destructive/90"
+                ? "border border-destructive text-destructive bg-background shadow-xs hover:bg-destructive hover:text-destructive-foreground focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40"
                 : undefined
             }
           >
