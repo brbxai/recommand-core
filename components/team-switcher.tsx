@@ -238,6 +238,7 @@ export function TeamSwitcher({
                 <DropdownMenuLabel className="text-muted-foreground text-xs px-2 py-2">
                   My Teams
                 </DropdownMenuLabel>
+                <div className="max-h-[300px] overflow-y-auto">
                   {teams
                     .filter((team: any) =>
                       (team.isMember === true || team.isMember === undefined) &&
@@ -274,6 +275,7 @@ export function TeamSwitcher({
                         </button>
                       </DropdownMenuItem>
                     ))}
+                </div>
 
                   {teams.filter((team: any) =>
                     team.isMember === false &&
@@ -285,7 +287,8 @@ export function TeamSwitcher({
                       <DropdownMenuLabel className="text-muted-foreground text-xs px-2 py-2">
                         Other Teams
                       </DropdownMenuLabel>
-                      {teams
+                      <div className="max-h-[200px] overflow-y-auto">
+                        {teams
                         .filter((team: any) =>
                           team.isMember === false &&
                           (!searchQuery.trim() ||
@@ -307,6 +310,7 @@ export function TeamSwitcher({
                             {team.name}
                           </DropdownMenuItem>
                         ))}
+                      </div>
                     </>
                   )}
 
