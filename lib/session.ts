@@ -19,7 +19,7 @@ const cookie = {
     sameSite: "Lax" as const,
     path: "/",
   },
-  duration: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
+  duration: 14 * 24 * 60 * 60 * 1000, // 14 days in milliseconds
 };
 
 
