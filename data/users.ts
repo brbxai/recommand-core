@@ -36,11 +36,33 @@ export const getCurrentUser = async (c: Context) => {
   // Transform the data to group teams under the user
   const user = data[0];
   const userTeams = data.map(row => row.teams).filter(Boolean);
-  
+
+  // If user is admin, fetch all teams and mark membership
+  if (user.isAdmin) {
+    const allTeams = await db.select().from(teams);
+    const userTeamIds = new Set(userTeams.map(t => t!.id));
+
+    const teamsWithMembership = allTeams.map(team => ({
+      ...team,
+      isMember: userTeamIds.has(team.id),
+    }));
+
+    return {
+      ...user,
+      teams: teamsWithMembership,
+    } as UserWithoutPassword & { teams: (typeof teams.$inferSelect & { isMember: boolean })[] };
+  }
+
+  // Non-admin users: return only their teams
+  const teamsWithMembership = userTeams.map(team => ({
+    ...team,
+    isMember: true,
+  }));
+
   return {
     ...user,
-    teams: userTeams,
-  } as UserWithoutPassword & { teams: typeof teams.$inferSelect[] };
+    teams: teamsWithMembership,
+  } as UserWithoutPassword & { teams: (typeof teams.$inferSelect & { isMember: boolean })[] };
 };
 
 export const createUser = async (userInfo: {

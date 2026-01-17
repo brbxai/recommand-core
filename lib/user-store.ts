@@ -243,7 +243,19 @@ export const useUserStore = create<UserState>((set, get) => ({
       set({ activeTeam: foundTeam || null });
       setStoredActiveTeamId(foundTeam?.id || null);
     } else {
-      set({ activeTeam: team });
+      if (team) {
+        const existingTeam = get().teams.find((t) => t.id === team.id);
+        if (!existingTeam) {
+          set({
+            teams: [...get().teams, team],
+            activeTeam: team
+          });
+        } else {
+          set({ activeTeam: team });
+        }
+      } else {
+        set({ activeTeam: team });
+      }
       setStoredActiveTeamId(team?.id || null);
     }
   },
