@@ -7,7 +7,18 @@ import type { Context } from "@recommand/lib/api";
 import { teamMembers, teams } from "@core/db/schema";
 import { randomBytes } from "crypto";
 
-export type UserWithoutPassword = Omit<typeof users.$inferSelect, "password">;
+export type UserWithoutPassword = Omit<typeof users.$inferSelect, "passwordHash" | "resetToken" | "resetTokenExpires" | "emailVerificationToken" | "emailVerificationExpires">;
+
+export const getUsers = async (): Promise<UserWithoutPassword[]> => {
+  return await db.select({
+    id: users.id,
+    email: users.email,
+    isAdmin: users.isAdmin,
+    emailVerified: users.emailVerified,
+    createdAt: users.createdAt,
+    updatedAt: users.updatedAt,
+  }).from(users);
+};
 
 export const getCurrentUser = async (c: Context) => {
   // Verify user's session

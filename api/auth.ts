@@ -1,6 +1,6 @@
 import { zodValidator } from "@recommand/lib/zod-validator";
 import { z } from "zod";
-import { checkBasicAuth, createUser, getCurrentUser } from "@core/data/users";
+import { checkBasicAuth, createUser, getCurrentUser, getUsers, type UserWithoutPassword } from "@core/data/users";
 import { createSession, deleteSession } from "@core/lib/session";
 import { actionFailure, actionSuccess } from "@recommand/lib/utils";
 import { Server } from "@recommand/lib/api";
@@ -9,7 +9,7 @@ import { users } from "@core/db/schema";
 import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { createTeam, getUserTeams, updateTeam, deleteTeam } from "@core/data/teams";
-import { requireAuth, requireTeamAccess } from "@core/lib/auth-middleware";
+import { requireAdmin, requireAuth, requireTeamAccess } from "@core/lib/auth-middleware";
 import { getCompletedOnboardingSteps } from "@core/data/onboarding";
 import { sendEmail } from "@core/lib/email";
 import { getEmailTemplate } from "@core/emails";
@@ -158,6 +158,16 @@ const teams = server.get("/auth/teams", requireAuth(), async (c) => {
     }
     const teams = await getUserTeams(userId);
     return c.json(actionSuccess({ data: teams }));
+  } catch (e) {
+    console.error(e);
+    return c.json(actionFailure("Internal server error"), 500);
+  }
+});
+
+const getUsersEndpoint = server.get("/auth/users", requireAdmin(), async (c) => {
+  try {
+    const usersWithoutPassword: UserWithoutPassword[] = await getUsers();
+    return c.json(actionSuccess({ usersWithoutPassword }));
   } catch (e) {
     console.error(e);
     return c.json(actionFailure("Internal server error"), 500);
@@ -573,6 +583,7 @@ export type Auth =
   | typeof logout
   | typeof me
   | typeof teams
+  | typeof getUsersEndpoint
   | typeof createTeamEndpoint
   | typeof updateTeamEndpoint
   | typeof deleteTeamEndpoint
