@@ -87,7 +87,8 @@ export function requireTeamAccess(options: TeamAccessOptions = {}) {
         }
 
         // If the user is not authenticated via an API key, ensure they are a member of the team
-        if (!(await isMember(user.id, teamIdFromRequest))) {
+        // Admins bypass this check and can access any team
+        if (!user.isAdmin && !(await isMember(user.id, teamIdFromRequest))) {
           return c.json(actionFailure("Unauthorized"), 401);
         }
 

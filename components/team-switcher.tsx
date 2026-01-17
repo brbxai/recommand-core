@@ -1,4 +1,4 @@
-import { ChevronsUpDown, Plus, GalleryVerticalEnd, Pencil } from "lucide-react";
+import { ChevronsUpDown, Plus, GalleryVerticalEnd, Pencil, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   DropdownMenu,
@@ -58,6 +58,7 @@ export function TeamSwitcher({
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const fetchTeams = useUserStore((x) => x.fetchTeams);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleCreateTeam = async () => {
     if (!newTeamName.trim()) {
@@ -144,6 +145,10 @@ export function TeamSwitcher({
     }
   };
 
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+  };
+
   if (!activeTeam) {
     return (
       <SidebarMenu>
@@ -181,7 +186,15 @@ export function TeamSwitcher({
     <>
       <SidebarMenu>
         <SidebarMenuItem>
-          <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+          <DropdownMenu
+            open={isDropdownOpen}
+            onOpenChange={(open) => {
+              setIsDropdownOpen(open);
+              if (!open) {
+                setSearchQuery("");
+              }
+            }}
+          >
             <DropdownMenuTrigger asChild>
               <SidebarMenuButton
                 size="lg"
@@ -207,93 +220,166 @@ export function TeamSwitcher({
               side={isMobile ? "bottom" : "right"}
               sideOffset={4}
             >
-              <DropdownMenuLabel className="text-muted-foreground text-xs">
-                Teams
-              </DropdownMenuLabel>
-              {transformedTeams.map((team, index) => (
-                <DropdownMenuItem
-                  key={team.name}
-                  className="gap-2 p-2 flex justify-between group"
-                  onSelect={(e) => e.preventDefault()}
-                >
-                  <div
-                    className="flex gap-2 items-center flex-1 cursor-pointer"
-                    onClick={() => {
-                      setActiveTeam(teams[index]);
-                      setIsDropdownOpen(false); // Close dropdown after team selection
-                    }}
-                  >
-                    <div className="flex size-6 items-center justify-center rounded-md border">
-                      <team.logo className="size-3.5 shrink-0" />
-                    </div>
-                    {team.name}
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditTeam(teams[index]);
-                    }}
-                    className="opacity-0 group-hover:opacity-100 p-2 hover:bg-accent rounded transition-all"
-                  >
-                    <Pencil className="size-3" />
-                  </button>
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="gap-2 p-2"
-                onClick={() => {
-                  setIsCreateTeamDialogOpen(true);
-                  setIsDropdownOpen(false); // Close dropdown when opening create dialog
-                }}
-              >
-                <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
-                  <Plus className="size-4" />
+              <div className="px-2 py-2 border-b">
+                <div className="relative">
+                  <Search className="absolute left-2 top-2.5 size-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search teams..."
+                    value={searchQuery}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    className="pl-8 h-9"
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                  />
                 </div>
-                <div>Add team</div>
-              </DropdownMenuItem>
-              {menuItems &&
-                Object.entries(menuItems).map(([group, items]) => (
-                  <DropdownMenuGroup key={group}>
-                    {items.map((item) => {
-                      if (item.href && !item.onClick) {
-                        // Render as a link
-                        return (
+              </div>
+
+              <>
+                <DropdownMenuLabel className="text-muted-foreground text-xs px-2 py-2">
+                  My Teams
+                </DropdownMenuLabel>
+                <div className="max-h-[300px] overflow-y-auto">
+                  {teams
+                    .filter((team: any) =>
+                      (team.isMember === true || team.isMember === undefined) &&
+                      (!searchQuery.trim() ||
+                        team.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                    )
+                    .map((team, index) => (
+                      <DropdownMenuItem
+                        key={team.id}
+                        className="gap-2 p-2 flex justify-between group"
+                        onSelect={(e) => e.preventDefault()}
+                      >
+                        <div
+                          className="flex gap-2 items-center flex-1 cursor-pointer"
+                          onClick={() => {
+                            setActiveTeam(team);
+                            setIsDropdownOpen(false);
+                            setSearchQuery("");
+                          }}
+                        >
+                          <div className="flex size-6 items-center justify-center rounded-md border">
+                            <GalleryVerticalEnd className="size-3.5 shrink-0" />
+                          </div>
+                          {team.name}
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditTeam(team);
+                          }}
+                          className="opacity-0 group-hover:opacity-100 p-2 hover:bg-accent rounded transition-all"
+                        >
+                          <Pencil className="size-3" />
+                        </button>
+                      </DropdownMenuItem>
+                    ))}
+                </div>
+
+                  {teams.filter((team: any) =>
+                    team.isMember === false &&
+                    (!searchQuery.trim() ||
+                      team.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                  ).length > 0 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel className="text-muted-foreground text-xs px-2 py-2">
+                        Other Teams
+                      </DropdownMenuLabel>
+                      <div className="max-h-[200px] overflow-y-auto">
+                        {teams
+                        .filter((team: any) =>
+                          team.isMember === false &&
+                          (!searchQuery.trim() ||
+                            team.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                        )
+                        .map((team) => (
                           <DropdownMenuItem
-                            key={item.id}
-                            asChild
+                            key={team.id}
                             className="gap-2 p-2"
+                            onClick={() => {
+                              setActiveTeam(team);
+                              setIsDropdownOpen(false);
+                              setSearchQuery("");
+                            }}
                           >
-                            <Link to={item.href}>
-                              {item.icon && (
-                                <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
-                                  <item.icon className="size-4" />
-                                </div>
-                              )}
-                              <span>{item.title}</span>
-                            </Link>
+                            <div className="flex size-6 items-center justify-center rounded-md border">
+                              <GalleryVerticalEnd className="size-3.5 shrink-0" />
+                            </div>
+                            {team.name}
                           </DropdownMenuItem>
-                        );
-                      } else {
-                        // Render as a button with onClick
-                        return (
-                          <DropdownMenuItem
-                            key={item.id}
-                            onClick={item.onClick}
-                            className="gap-2 p-2"
-                          >
-                            {item.icon && (
-                              <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
-                                <item.icon className="size-4" />
-                              </div>
-                            )}
-                            <span>{item.title}</span>
-                          </DropdownMenuItem>
-                        );
-                      }
-                    })}
-                  </DropdownMenuGroup>
-                ))}
+                        ))}
+                      </div>
+                    </>
+                  )}
+
+                  {searchQuery.trim() &&
+                   teams.filter((t: any) => t.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
+                    <div className="py-6 text-center text-sm text-muted-foreground">
+                      No teams found
+                    </div>
+                  )}
+
+                  {!searchQuery.trim() && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="gap-2 p-2"
+                        onClick={() => {
+                          setIsCreateTeamDialogOpen(true);
+                          setIsDropdownOpen(false);
+                        }}
+                      >
+                        <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
+                          <Plus className="size-4" />
+                        </div>
+                        <div>Add team</div>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+
+                  {!searchQuery.trim() && menuItems &&
+                    Object.entries(menuItems).map(([group, items]) => (
+                      <DropdownMenuGroup key={group}>
+                        {items.map((item) => {
+                          if (item.href && !item.onClick) {
+                            return (
+                              <DropdownMenuItem
+                                key={item.id}
+                                asChild
+                                className="gap-2 p-2"
+                              >
+                                <Link to={item.href}>
+                                  {item.icon && (
+                                    <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
+                                      <item.icon className="size-4" />
+                                    </div>
+                                  )}
+                                  <span>{item.title}</span>
+                                </Link>
+                              </DropdownMenuItem>
+                            );
+                          } else {
+                            return (
+                              <DropdownMenuItem
+                                key={item.id}
+                                onClick={item.onClick}
+                                className="gap-2 p-2"
+                              >
+                                {item.icon && (
+                                  <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
+                                    <item.icon className="size-4" />
+                                  </div>
+                                )}
+                                <span>{item.title}</span>
+                              </DropdownMenuItem>
+                            );
+                          }
+                        })}
+                      </DropdownMenuGroup>
+                    ))}
+              </>
             </DropdownMenuContent>
           </DropdownMenu>
         </SidebarMenuItem>
