@@ -85,6 +85,7 @@ export function PageTemplate({
             <h2 className="text-2xl font-semibold">
               {title !== undefined ? title : breadcrumbs[breadcrumbs.length - 1].label || "..."}
             </h2>
+            <title>{breadcrumbs[breadcrumbs.length - 1].label || "..."}</title>
             {description && (
               <p className="text-muted-foreground text-sm text-balance max-w-lg mt-1">
                 {description}
