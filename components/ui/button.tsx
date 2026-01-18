@@ -67,7 +67,7 @@ function ButtonLink({ className, variant, size, ...props }: ButtonLinkProps) {
   return (
     <a
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cn(buttonVariants({ variant, size, className }), "cursor-default")}
       {...props}
     />
   );
