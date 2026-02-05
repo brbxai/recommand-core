@@ -29,6 +29,9 @@ interface UserState {
   activeTeam: Team | null;
   setActiveTeam: (team: Team | string | null) => void;
   removeTeam: (teamId: string) => void;
+
+  // Permissions per team (keyed by teamId)
+  teamPermissions: Record<string, string[]>;
 }
 
 const client = rc<Auth>("core");
@@ -58,6 +61,7 @@ function setStoredActiveTeamId(teamId: string | null): void {
 function transformUserData(data: any): UserWithoutPassword & {
   teams?: Team[];
   completedOnboardingSteps: MinimalCompletedOnboardingStep[];
+  teamPermissions?: Record<string, string[]>;
 } {
   return {
     ...data,
@@ -71,6 +75,7 @@ function transformUserData(data: any): UserWithoutPassword & {
       createdAt: new Date(team.createdAt),
     })),
     completedOnboardingSteps: data.completedOnboardingSteps,
+    teamPermissions: data.teamPermissions,
   };
 }
 
@@ -87,6 +92,7 @@ export const useUserStore = create<UserState>((set, get) => ({
   teams: [],
   teamsAreLoaded: false,
   activeTeam: null,
+  teamPermissions: {},
 
   fetchUser: async () => {
     try {
@@ -105,6 +111,7 @@ export const useUserStore = create<UserState>((set, get) => ({
           activeTeam: get().activeTeam || storedTeam || transformedUser.teams?.[0] || null,
           isLoading: false,
           completedOnboardingSteps: transformedUser.completedOnboardingSteps,
+          teamPermissions: transformedUser.teamPermissions ?? {},
         });
       } else if (!userData.success) {
         set({
@@ -184,7 +191,7 @@ export const useUserStore = create<UserState>((set, get) => ({
       const response = await res.json();
 
       if (response.success) {
-        set({ user: null, isLoading: false, activeTeam: null, teams: [] });
+        set({ user: null, isLoading: false, activeTeam: null, teams: [], teamPermissions: {} });
         setStoredActiveTeamId(null);
       } else {
         set({

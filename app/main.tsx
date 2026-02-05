@@ -57,6 +57,7 @@ export default function Main({ children }: { children: React.ReactNode }) {
             title: 'Team',
             icon: Users,
             href: '/team',
+            requiredPermission: "core.team.manage",
         });
 
         registerMenuItem({

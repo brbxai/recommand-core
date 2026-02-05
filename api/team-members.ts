@@ -4,6 +4,7 @@ import { actionFailure, actionSuccess } from "@recommand/lib/utils";
 import { Server } from "@recommand/lib/api";
 import { getMinimalTeamMembers, addTeamMember, removeTeamMember, getUserByEmail, isTeamMember } from "@core/data/team-members";
 import { requireTeamAccess } from "@core/lib/auth-middleware";
+import { requirePermission } from "@core/lib/permissions/permission-middleware";
 import { createUserForInvitation } from "@core/data/users";
 import { sendEmail } from "@core/lib/email";
 import { getEmailTemplate } from "@core/emails";
@@ -46,6 +47,7 @@ const _getTeamMembers = server.get(
 const _addTeamMember = server.post(
   "/auth/teams/:teamId/members",
   requireTeamAccess(),
+  requirePermission("core.team.manage"),
   zodValidator(
     "param",
     z.object({
@@ -122,6 +124,7 @@ const _addTeamMember = server.post(
 const _removeTeamMember = server.delete(
   "/auth/teams/:teamId/members/:userId",
   requireTeamAccess(),
+  requirePermission("core.team.manage"),
   zodValidator(
     "param",
     z.object({

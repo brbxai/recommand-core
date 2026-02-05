@@ -16,11 +16,11 @@ import { Input } from "@core/components/ui/input";
 import { toast } from "@core/components/ui/sonner";
 import { stringifyActionFailure } from "@recommand/lib/utils";
 import type { MinimalTeamMember } from "@core/data/team-members";
-import { useActiveTeam } from "@core/hooks/user";
-import { Trash2, Loader2, Copy } from "lucide-react";
+import { useActiveTeam, useHasPermission } from "@core/hooks/user";
+import { Trash2, Loader2, Copy, Shield } from "lucide-react";
 import { ColumnHeader } from "@core/components/data-table/column-header";
 import { ConfirmDialog } from "@core/components/confirm-dialog";
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router";
 import { useUserStore } from "@core/lib/user-store";
 
 const client = rc<TeamMembers>("core");
@@ -35,6 +35,7 @@ export default function Page() {
   const [isDeletingTeam, setIsDeletingTeam] = useState(false);
   const activeTeam = useActiveTeam();
   const navigate = useNavigate();
+  const canManageTeam = useHasPermission("core.team.manage");
 
   const fetchTeamMembers = useCallback(async () => {
     if (!activeTeam?.id) {
@@ -202,16 +203,29 @@ export default function Page() {
     {
       id: "actions",
       header: "",
-      size: 100,
+      size: 140,
       cell: ({ row }) => {
         const userId = row.original.user.id;
         if (!userId) return null;
 
         return (
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex items-center justify-end gap-1">
+            {canManageTeam && (
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild
+                title="Manage permissions"
+              >
+                <Link to={`/team/member/${userId}`}>
+                  <Shield className="h-4 w-4" />
+                </Link>
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
+              title="Remove team member"
               onClick={() => {
                 if (!activeTeam?.id) return;
 

@@ -8,6 +8,7 @@ import apiKeys from "api/api-keys";
 import oauth from "api/oauth";
 import onboarding from "./api/onboarding";
 import teamMembers from "./api/team-members";
+import permissions from "./api/permissions";
 
 let logger: Logger;
 
@@ -31,5 +32,6 @@ server.route("/", teamMembers);
 server.route("/", apiKeys);
 server.route("/", oauth);
 server.route("/", onboarding);
+server.route("/", permissions);
 
 export default server;
