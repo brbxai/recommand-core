@@ -1,5 +1,6 @@
-import { teamMembers, teams } from "@core/db/schema";
+import { teamMembers, teams, userPermissions } from "@core/db/schema";
 import { emitBackendEvent, CORE_BACKEND_EVENTS } from "@core/lib/backend-events";
+import { getTeamCreationPermissions } from "@core/lib/permissions";
 import { db } from "@recommand/db";
 import { and, count, eq } from "drizzle-orm";
 
@@ -29,6 +30,20 @@ export async function createTeam(
       userId,
       teamId: newTeam.id,
     });
+
+    // Grant team creation permissions to the creator
+    const creationPermissions = getTeamCreationPermissions();
+    if (creationPermissions.length > 0) {
+      await tx.insert(userPermissions).values(
+        creationPermissions.map(permission => ({
+          userId,
+          teamId: newTeam.id,
+          permissionId: permission.id,
+          grantedByUserId: null, // System-granted on team creation
+        }))
+      );
+    }
+
     await emitBackendEvent(CORE_BACKEND_EVENTS.TEAM_CREATED, newTeam);
     await emitBackendEvent(CORE_BACKEND_EVENTS.TEAM_MEMBER_ADDED, { teamId: newTeam.id, userId });
     return newTeam;

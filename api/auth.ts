@@ -5,8 +5,8 @@ import { createSession, deleteSession } from "@core/lib/session";
 import { actionFailure, actionSuccess } from "@recommand/lib/utils";
 import { Server } from "@recommand/lib/api";
 import { db } from "@recommand/db";
-import { users } from "@core/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { users, userPermissions } from "@core/db/schema";
+import { eq, inArray, and, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { createTeam, getUserTeams, updateTeam, deleteTeam } from "@core/data/teams";
 import { requireAdmin, requireAuth, requireTeamAccess } from "@core/lib/auth-middleware";
@@ -136,11 +136,40 @@ const me = server.get("/auth/me", requireAuth(), async (c) => {
       return c.json(actionFailure("User not found"), 404);
     }
     const completedOnboardingSteps = await getCompletedOnboardingSteps(user.id);
+
+    // Fetch all permissions for all teams the user is a member of
+    const teamIds = user.teams?.filter(t => t.isMember).map(t => t.id) ?? [];
+    let teamPermissions: Record<string, string[]> = {};
+
+    if (teamIds.length > 0) {
+      const permissions = await db
+        .select({
+          teamId: userPermissions.teamId,
+          permissionId: userPermissions.permissionId,
+        })
+        .from(userPermissions)
+        .where(
+          and(
+            eq(userPermissions.userId, user.id),
+            inArray(userPermissions.teamId, teamIds),
+          )
+        );
+
+      // Group permissions by team
+      for (const perm of permissions) {
+        if (!teamPermissions[perm.teamId]) {
+          teamPermissions[perm.teamId] = [];
+        }
+        teamPermissions[perm.teamId].push(perm.permissionId);
+      }
+    }
+
     return c.json(
       actionSuccess({
         data: {
           ...user,
           completedOnboardingSteps,
+          teamPermissions,
         },
       })
     );
