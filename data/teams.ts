@@ -29,8 +29,8 @@ export async function createTeam(
       userId,
       teamId: newTeam.id,
     });
-    await emitBackendEvent(CORE_BACKEND_EVENTS.TEAM_CREATED, newTeam);
-    await emitBackendEvent(CORE_BACKEND_EVENTS.TEAM_MEMBER_ADDED, { teamId: newTeam.id, userId });
+    await emitBackendEvent(CORE_BACKEND_EVENTS.TEAM_CREATED, {...newTeam, tx});
+    await emitBackendEvent(CORE_BACKEND_EVENTS.TEAM_MEMBER_ADDED, { teamId: newTeam.id, userId, tx });
     return newTeam;
   });
 }
