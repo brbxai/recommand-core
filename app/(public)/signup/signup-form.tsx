@@ -16,6 +16,7 @@ import { useUserStore } from "../../../lib/user-store";
 import { rc } from "@recommand/lib/client";
 import type { Auth } from "api/auth";
 import { stringifyActionFailure } from "@recommand/lib/utils";
+import { useTranslation } from "@core/hooks/use-translation";
 
 const client = rc<Auth>("core");
 
@@ -28,6 +29,7 @@ export default function SignupForm({
   const [isSignupComplete, setIsSignupComplete] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const { signup } = useUserStore();
+  const { t } = useTranslation();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -35,18 +37,18 @@ export default function SignupForm({
       const response = await signup(email, password);
       if (response?.success) {
         setIsSignupComplete(true);
-        toast.success("Account created successfully!", {
+        toast.success(t`Account created successfully!`, {
           description:
             response.message ||
-            "Please check your email to confirm your account.",
+            t`Please check your email to confirm your account.`,
         });
       }
     } catch (error) {
-      toast.error("Signup failed", {
+      toast.error(t`Signup failed`, {
         description:
           error instanceof Error
             ? error.message
-            : "An unexpected error occurred",
+            : t`An unexpected error occurred`,
       });
     }
   };
@@ -60,20 +62,20 @@ export default function SignupForm({
       const data = await res.json();
 
       if (data.success) {
-        toast.success("Confirmation email sent!", {
+        toast.success(t`Confirmation email sent!`, {
           description: data.message,
         });
       } else {
-        toast.error("Failed to resend confirmation", {
+        toast.error(t`Failed to resend confirmation`, {
           description: stringifyActionFailure(data.errors),
         });
       }
     } catch (error) {
-      toast.error("Failed to resend confirmation", {
+      toast.error(t`Failed to resend confirmation`, {
         description:
           error instanceof Error
             ? error.message
-            : "An unexpected error occurred",
+            : t`An unexpected error occurred`,
       });
     } finally {
       setIsResending(false);
@@ -84,23 +86,22 @@ export default function SignupForm({
     return (
       <div className={cn("flex flex-col gap-6", className)} {...props}>
         <div className="flex justify-center mb-4">
-          <img 
-            src="/logo.svg" 
-            alt="Logo" 
+          <img
+            src="/logo.svg"
+            alt="Logo"
             className="h-12 w-auto"
           />
         </div>
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Check your email</CardTitle>
+            <CardTitle className="text-2xl">{t`Check your email`}</CardTitle>
             <CardDescription>
-              We've sent a confirmation link to <strong>{email}</strong>
+              {t`We've sent a confirmation link to`} <strong>{email}</strong>
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Please check your email and click the confirmation link to
-              activate your account.
+              {t`Please check your email and click the confirmation link to activate your account.`}
             </p>
             <div className="flex flex-col space-y-2">
               <Button
@@ -109,13 +110,13 @@ export default function SignupForm({
                 variant="outline"
                 className="w-full"
               >
-                {isResending ? "Sending..." : "Resend confirmation email"}
+                {isResending ? t`Sending...` : t`Resend confirmation email`}
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">
-              Already have an account?{" "}
+              {t`Already have an account?`}{" "}
               <a href="/login" className="underline underline-offset-4">
-                Login
+                {t`Login`}
               </a>
             </div>
           </CardContent>
@@ -127,24 +128,24 @@ export default function SignupForm({
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <div className="flex justify-center mb-4">
-        <img 
-          src="/logo.svg" 
-          alt="Logo" 
+        <img
+          src="/logo.svg"
+          alt="Logo"
           className="h-12 w-auto"
         />
       </div>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Sign up</CardTitle>
+          <CardTitle className="text-2xl">{t`Sign up`}</CardTitle>
           <CardDescription>
-            Enter your email below to create your account
+            {t`Enter your email below to create your account`}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t`Email`}</Label>
                 <Input
                   id="email"
                   name="email"
@@ -159,7 +160,7 @@ export default function SignupForm({
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t`Password`}</Label>
                 <PasswordInput
                   name="password"
                   required
@@ -171,17 +172,17 @@ export default function SignupForm({
                 />
               </div>
               <Button type="submit" className="w-full" tabIndex={3}>
-                Sign up
+                {t`Sign up`}
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">
-              Already have an account?{" "}
+              {t`Already have an account?`}{" "}
               <a
                 href="/login"
                 className="underline underline-offset-4"
                 tabIndex={4}
               >
-                Login
+                {t`Login`}
               </a>
             </div>
           </form>

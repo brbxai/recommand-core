@@ -11,6 +11,7 @@ import { useParams, Link } from "react-router";
 import { Checkbox } from "@core/components/ui/checkbox";
 import { Label } from "@core/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@core/components/ui/card";
+import { useTranslation } from "@core/hooks/use-translation";
 
 const permissionsClient = rc<Permissions>("core");
 const teamMembersClient = rc<TeamMembers>("core");
@@ -34,7 +35,8 @@ type UserPermission = {
 export default function UserPermissionsPage() {
   const { userId } = useParams<{ userId: string }>();
   const activeTeam = useActiveTeam();
-  
+  const { t } = useTranslation();
+
   const [allPermissions, setAllPermissions] = useState<PermissionWithGrantable[]>([]);
   const [userPermissions, setUserPermissions] = useState<UserPermission[]>([]);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -81,7 +83,7 @@ export default function UserPermissionsPage() {
       }
     } catch (error) {
       console.error("Error fetching data:", error);
-      toast.error("Failed to load permissions data");
+      toast.error(t`Failed to load permissions data`);
     } finally {
       setIsLoading(false);
     }
@@ -114,7 +116,7 @@ export default function UserPermissionsPage() {
         }
 
         setUserPermissions((prev) => prev.filter((p) => p.permissionId !== permissionId));
-        toast.success("Permission revoked");
+        toast.success(t`Permission revoked`);
       } else {
         // Grant permission
         const res = await permissionsClient["auth"]["teams"][":teamId"]["members"][":userId"]["permissions"].$post({
@@ -130,11 +132,11 @@ export default function UserPermissionsPage() {
         if (json.permission) {
           setUserPermissions((prev) => [...prev, json.permission]);
         }
-        toast.success("Permission granted");
+        toast.success(t`Permission granted`);
       }
     } catch (error) {
       console.error("Error toggling permission:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to update permission");
+      toast.error(error instanceof Error ? error.message : t`Failed to update permission`);
     } finally {
       // Remove from pending set
       setPendingPermissions((prev) => {
@@ -149,9 +151,9 @@ export default function UserPermissionsPage() {
     return (
       <PageTemplate
         breadcrumbs={[
-          { label: "User Settings" },
-          { label: "Team", href: "/team" },
-          { label: "Member Permissions" },
+          { label: t`User Settings` },
+          { label: t`Team`, href: "/team" },
+          { label: t`Member Permissions` },
         ]}
       >
         <div className="flex items-center justify-center py-16">
@@ -164,25 +166,25 @@ export default function UserPermissionsPage() {
   return (
     <PageTemplate
       breadcrumbs={[
-        { label: "User Settings" },
-        { label: "Team", href: "/team" },
-        { label: "Member Permissions" },
+        { label: t`User Settings` },
+        { label: t`Team`, href: "/team" },
+        { label: t`Member Permissions` },
       ]}
-      title={userEmail ? `Permissions for ${userEmail}` : "Member Permissions"}
-      description="Manage what this team member is allowed to do. Toggle permissions on or off instantly."
+      title={userEmail ? t`Permissions for ${userEmail}` : t`Member Permissions`}
+      description={t`Manage what this team member is allowed to do. Toggle permissions on or off instantly.`}
     >
       <div className="space-y-6">
         <Card className="max-w-2xl">
           <CardHeader>
-            <CardTitle>Permissions</CardTitle>
+            <CardTitle>{t`Permissions`}</CardTitle>
             <CardDescription>
-              Select which permissions this team member should have
+              {t`Select which permissions this team member should have`}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {allPermissions.length === 0 ? (
               <p className="text-muted-foreground text-center py-4">
-                No permissions are available to manage.
+                {t`No permissions are available to manage.`}
               </p>
             ) : (
               <div className="space-y-4">
@@ -220,7 +222,7 @@ export default function UserPermissionsPage() {
                         )}
                         {!permission.isGrantable && (
                           <p className="text-xs text-destructive">
-                            You don't have permission to grant or revoke this permission.
+                            {t`You don't have permission to grant or revoke this permission.`}
                           </p>
                         )}
                       </div>

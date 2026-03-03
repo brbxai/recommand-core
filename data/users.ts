@@ -15,6 +15,7 @@ export const getUsers = async (): Promise<UserWithoutPassword[]> => {
     email: users.email,
     isAdmin: users.isAdmin,
     emailVerified: users.emailVerified,
+    language: users.language,
     createdAt: users.createdAt,
     updatedAt: users.updatedAt,
   }).from(users);
@@ -145,6 +146,7 @@ export const checkBasicAuth = async (username: string, password: string) => {
       isAdmin: users.isAdmin,
       password: users.passwordHash,
       emailVerified: users.emailVerified,
+      language: users.language,
     })
     .from(users)
     .where(eq(users.email, normalizedUsername));

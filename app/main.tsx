@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes, useLocation, useNavigate } from 'react-ro
 import { routes } from 'virtual:recommand-file-based-router'
 import './index.css'
 import { useMenuItemActions } from '@core/lib/menu-store';
+import { useTranslation } from '@core/hooks/use-translation';
 import { KeyRound, Lock, LogOut, Moon, Sun, Users } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useUserStore } from '@core/lib/user-store';
@@ -33,6 +34,7 @@ export default function Main({ children }: { children: React.ReactNode }) {
     const logout = useUserStore(state => state.logout);
     const user = useUserStore(state => state.user);
     const { theme, setTheme } = useTheme();
+    const { t } = useTranslation();
     const [passwordResetDialog, setPasswordResetDialog] = useState<{
         open: boolean;
         title: string;
@@ -42,19 +44,19 @@ export default function Main({ children }: { children: React.ReactNode }) {
         title: '',
         description: '',
     });
-    
+
     useEffect(() => {
 
         registerMenuItem({
             id: 'user.api.api_keys',
-            title: 'API Keys',
+            title: t`API Keys`,
             icon: KeyRound,
             href: '/api-keys',
         });
 
         registerMenuItem({
             id: 'user.api.team',
-            title: 'Team',
+            title: t`Team`,
             icon: Users,
             href: '/team',
             requiredPermission: "core.team.manage",
@@ -62,14 +64,14 @@ export default function Main({ children }: { children: React.ReactNode }) {
 
         registerMenuItem({
             id: 'user.session.change_password',
-            title: 'Change password',
+            title: t`Change password`,
             icon: Lock,
             onClick: async () => {
                 if (!user?.email) {
                     setPasswordResetDialog({
                         open: true,
-                        title: 'Unable to change password',
-                        description: 'User email not available',
+                        title: t`Unable to change password`,
+                        description: t`User email not available`,
                     });
                     return;
                 }
@@ -83,22 +85,22 @@ export default function Main({ children }: { children: React.ReactNode }) {
                     if (data.success) {
                         setPasswordResetDialog({
                             open: true,
-                            title: 'Password reset email sent',
-                            description: 'Check your email for instructions to reset your password',
+                            title: t`Password reset email sent`,
+                            description: t`Check your email for instructions to reset your password`,
                         });
                     } else {
                         setPasswordResetDialog({
                             open: true,
-                            title: 'Failed to send reset link',
+                            title: t`Failed to send reset link`,
                             description: stringifyActionFailure(data.errors),
                         });
                     }
                 } catch (err) {
                     setPasswordResetDialog({
                         open: true,
-                        title: 'Failed to send reset link',
+                        title: t`Failed to send reset link`,
                         description:
-                            err instanceof Error ? err.message : "An unexpected error occurred",
+                            err instanceof Error ? err.message : t`An unexpected error occurred`,
                     });
                 }
             }
@@ -115,19 +117,19 @@ export default function Main({ children }: { children: React.ReactNode }) {
 
         registerMenuItem({
             id: 'user.session.logout',
-            title: 'Logout',
+            title: t`Logout`,
             icon: LogOut,
             onClick: async () => {
                 try {
                     await logout();
-                    toast.success("Logged out successfully");
+                    toast.success(t`Logged out successfully`);
                 } catch (error) {
-                    toast.error("Failed to log out");
+                    toast.error(t`Failed to log out`);
                 }
             }
         });
 
-    }, [logout, user, theme, setTheme]);
+    }, [logout, user, theme, setTheme, t]);
 
     return <BrowserRouter>
         {children}
@@ -141,7 +143,7 @@ export default function Main({ children }: { children: React.ReactNode }) {
                 </DialogHeader>
                 <DialogFooter>
                     <Button onClick={() => setPasswordResetDialog(prev => ({ ...prev, open: false }))}>
-                        Close
+                        {t`Close`}
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -161,6 +163,11 @@ function getPublicPaths(routeTree: typeof routes[number][]) {
         }
     }
     return publicPaths;
+}
+
+function TranslationLoader() {
+    useTranslation();
+    return null;
 }
 
 const RouterInner = () => {
@@ -185,7 +192,10 @@ const RouterInner = () => {
         }
     }, [user, isLoading]);
 
-    return <Routes>
-        {routes.map((route) => renderRoute(route))}
-    </Routes>
+    return <>
+        <TranslationLoader />
+        <Routes>
+            {routes.map((route) => renderRoute(route))}
+        </Routes>
+    </>
 }

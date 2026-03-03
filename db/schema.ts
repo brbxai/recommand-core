@@ -22,6 +22,7 @@ export const users = pgTable("users", {
   resetToken: text("reset_token"),
   resetTokenExpires: timestamp("reset_token_expires"),
   isAdmin: boolean("is_admin").default(false).notNull(),
+  language: text("language").default("en").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: autoUpdateTimestamp(),
 });

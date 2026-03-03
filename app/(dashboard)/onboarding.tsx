@@ -8,18 +8,20 @@ import type { Onboarding } from "api/onboarding";
 import { Button } from "@core/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { useCallback } from "react";
+import { useTranslation } from "@core/hooks/use-translation";
 
 const client = rc<Onboarding>("core");
 
 export default function Onboarding({ step }: { step: OnboardingStep }) {
   const activeTeam = useActiveTeam();
   const addCompletedOnboardingStep = useUserStore(x => x.addCompletedOnboardingStep);
+  const { t } = useTranslation();
 
   const onComplete = useCallback(async () => {
 
     if (step.scope === "team") {
       if (!activeTeam?.id) {
-        toast.error("You must be in a team to complete this step");
+        toast.error(t`You must be in a team to complete this step`);
         return;
       }
     }
@@ -39,7 +41,7 @@ export default function Onboarding({ step }: { step: OnboardingStep }) {
         toast.error(stringifyActionFailure(json.errors));
       }
     } catch (error) {
-      toast.error("Failed to complete step");
+      toast.error(t`Failed to complete step`);
     }
   }, [activeTeam?.id, addCompletedOnboardingStep, step.id]);
 
@@ -59,7 +61,7 @@ export default function Onboarding({ step }: { step: OnboardingStep }) {
         <Button
           onClick={onComplete}
         >
-          Continue
+          {t`Continue`}
           <ArrowRight className="w-4 h-4" />
         </Button>
       </div>}

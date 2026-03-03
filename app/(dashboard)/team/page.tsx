@@ -22,6 +22,7 @@ import { ColumnHeader } from "@core/components/data-table/column-header";
 import { ConfirmDialog } from "@core/components/confirm-dialog";
 import { useNavigate, Link } from "react-router";
 import { useUserStore } from "@core/lib/user-store";
+import { useTranslation } from "@core/hooks/use-translation";
 
 const client = rc<TeamMembers>("core");
 const authClient = rc<Auth>("core");
@@ -36,6 +37,7 @@ export default function Page() {
   const activeTeam = useActiveTeam();
   const navigate = useNavigate();
   const canManageTeam = useHasPermission("core.team.manage");
+  const { t } = useTranslation();
 
   const fetchTeamMembers = useCallback(async () => {
     if (!activeTeam?.id) {
@@ -52,7 +54,7 @@ export default function Page() {
 
       if (!json.success || !Array.isArray(json.members)) {
         console.error("Invalid API response format:", json);
-        toast.error("Failed to load team members");
+        toast.error(t`Failed to load team members`);
         setTeamMembers([]);
       } else {
         setTeamMembers(
@@ -70,7 +72,7 @@ export default function Page() {
       }
     } catch (error) {
       console.error("Error fetching team members:", error);
-      toast.error("Failed to load team members");
+      toast.error(t`Failed to load team members`);
       setTeamMembers([]);
     } finally {
       setIsLoading(false);
@@ -84,7 +86,7 @@ export default function Page() {
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeTeam?.id || !newMemberEmail.trim()) {
-      toast.error("Please enter a valid email address");
+      toast.error(t`Please enter a valid email address`);
       return;
     }
 
@@ -101,11 +103,11 @@ export default function Page() {
       }
 
       setNewMemberEmail("");
-      toast.success(json.message || "Team member added successfully");
+      toast.success(json.message || t`Team member added successfully`);
       fetchTeamMembers();
     } catch (error) {
       console.error("Error adding team member:", error);
-      toast.error("Failed to add team member");
+      toast.error(t`Failed to add team member`);
     } finally {
       setIsAddingMember(false);
     }
@@ -113,7 +115,7 @@ export default function Page() {
 
   const handleDeleteTeam = async () => {
     if (!activeTeam?.id) {
-      toast.error("No active team selected");
+      toast.error(t`No active team selected`);
       return;
     }
 
@@ -128,14 +130,14 @@ export default function Page() {
         throw new Error(stringifyActionFailure(json.errors));
       }
 
-      toast.success("Team deleted successfully");
+      toast.success(t`Team deleted successfully`);
       // Clear the current active team
       useUserStore.getState().removeTeam(activeTeam.id);
       // Navigate to a safe location after team deletion
       navigate("/");
     } catch (error) {
       console.error("Error deleting team:", error);
-      toast.error("Failed to delete team");
+      toast.error(t`Failed to delete team`);
     } finally {
       setIsDeletingTeam(false);
     }
@@ -144,12 +146,12 @@ export default function Page() {
   const columns: ColumnDef<MinimalTeamMember>[] = [
     {
       accessorKey: "user.id",
-      header: ({ column }) => <ColumnHeader column={column} title="User ID" />,
+      header: ({ column }) => <ColumnHeader column={column} title={t`User ID`} />,
       size: 200,
       cell: ({ row }) => {
         const userId = row.original.user.id;
         if (!userId) return <div className="text-muted-foreground">N/A</div>;
-        
+
         return (
           <div className="flex items-center gap-2">
             <span className="font-mono text-xs">
@@ -162,7 +164,7 @@ export default function Page() {
               size="icon"
               onClick={() => {
                 navigator.clipboard.writeText(userId);
-                toast.success("User ID copied to clipboard");
+                toast.success(t`User ID copied to clipboard`);
               }}
             >
               <Copy className="h-4 w-4" />
@@ -173,18 +175,18 @@ export default function Page() {
     },
     {
       accessorKey: "user.email",
-      header: ({ column }) => <ColumnHeader column={column} title="Email" />,
+      header: ({ column }) => <ColumnHeader column={column} title={t`Email`} />,
       cell: ({ row }) => row.original.user.email ?? "N/A",
     },
     {
       accessorKey: "user.emailVerified",
-      header: ({ column }) => <ColumnHeader column={column} title="Verified" />,
+      header: ({ column }) => <ColumnHeader column={column} title={t`Verified`} />,
       cell: ({ row }) => (
         <div className="flex items-center">
           {row.original.user.emailVerified ? (
-            <span className="text-folder">✓ Verified</span>
+            <span className="text-folder">{t`Verified`}</span>
           ) : (
-            <span className="text-warning">⚠ Unverified</span>
+            <span className="text-warning">{t`Unverified`}</span>
           )}
         </div>
       ),
@@ -192,7 +194,7 @@ export default function Page() {
     {
       accessorKey: "createdAt",
       header: ({ column }) => (
-        <ColumnHeader column={column} title="Joined At" />
+        <ColumnHeader column={column} title={t`Joined At`} />
       ),
       cell: ({ row }) => {
         const date = row.getValue("createdAt") as Date;
@@ -215,7 +217,7 @@ export default function Page() {
                 variant="ghost"
                 size="icon"
                 asChild
-                title="Manage permissions"
+                title={t`Manage permissions`}
               >
                 <Link to={`/team/member/${userId}`}>
                   <Shield className="h-4 w-4" />
@@ -225,7 +227,7 @@ export default function Page() {
             <Button
               variant="ghost"
               size="icon"
-              title="Remove team member"
+              title={t`Remove team member`}
               onClick={() => {
                 if (!activeTeam?.id) return;
 
@@ -239,7 +241,7 @@ export default function Page() {
                   .then(async (res: Response) => {
                     const json = await res.json();
                     if (json.success) {
-                      toast.success("Team member removed successfully");
+                      toast.success(t`Team member removed successfully`);
                       fetchTeamMembers();
                     } else {
                       toast.error(stringifyActionFailure(json.errors));
@@ -247,7 +249,7 @@ export default function Page() {
                   })
                   .catch((error) => {
                     console.error("Error removing team member:", error);
-                    toast.error("Failed to remove team member");
+                    toast.error(t`Failed to remove team member`);
                   });
               }}
             >
@@ -272,13 +274,13 @@ export default function Page() {
 
   return (
     <PageTemplate
-      breadcrumbs={[{ label: "User Settings" }, { label: "Team" }]}
+      breadcrumbs={[{ label: t`User Settings` }, { label: t`Team` }]}
       buttons={[
         <ConfirmDialog
           key="delete-team-dialog"
-          title="Delete Team"
-          description={`Are you sure you want to delete the team "${activeTeam?.name}"? This action cannot be undone. All team members, API keys, and associated data will be permanently removed.`}
-          confirmButtonText="Delete Team"
+          title={t`Delete Team`}
+          description={t`Are you sure you want to delete the team "${activeTeam?.name}"? This action cannot be undone. All team members, API keys, and associated data will be permanently removed.`}
+          confirmButtonText={t`Delete Team`}
           onConfirm={handleDeleteTeam}
           isLoading={isDeletingTeam}
           trigger={
@@ -286,12 +288,12 @@ export default function Page() {
               {isDeletingTeam ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Deleting...
+                  {t`Deleting...`}
                 </>
               ) : (
                 <>
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Team
+                  {t`Delete Team`}
                 </>
               )}
             </Button>
@@ -302,7 +304,7 @@ export default function Page() {
       <div className="space-y-6">
         <div className="flex items-center gap-4 max-w-xl">
           <Input
-            placeholder="Email address to invite"
+            placeholder={t`Email address to invite`}
             value={newMemberEmail}
             onChange={(e) => setNewMemberEmail(e.target.value)}
             onKeyDown={(e) => {
@@ -312,24 +314,24 @@ export default function Page() {
             }}
             disabled={isAddingMember}
           />
-          <Button 
-            onClick={handleAddMember} 
+          <Button
+            onClick={handleAddMember}
             disabled={isAddingMember || !newMemberEmail.trim()}
           >
             {isAddingMember ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Inviting...
+                {t`Inviting...`}
               </>
             ) : (
-              "Invite Member"
+              t`Invite Member`
             )}
           </Button>
         </div>
         <div className="rounded-lg border p-4 space-y-4 max-w-xl bg-muted">
           <div className="space-y-3">
             <div>
-              <label className="text-sm font-medium">Team Name</label>
+              <label className="text-sm font-medium">{t`Team Name`}</label>
               <div className="flex items-center gap-2">
                 <Input
                   value={activeTeam?.name ?? ""}
@@ -341,7 +343,7 @@ export default function Page() {
                   onClick={() => {
                     if (activeTeam?.name) {
                       navigator.clipboard.writeText(activeTeam.name);
-                      toast.success("Team name copied to clipboard");
+                      toast.success(t`Team name copied to clipboard`);
                     }
                   }}
                 >
@@ -351,9 +353,9 @@ export default function Page() {
             </div>
             <div>
               <div className="space-y-2">
-                <h3 className="font-medium">Team ID</h3>
+                <h3 className="font-medium">{t`Team ID`}</h3>
                 <p className="text-sm text-muted-foreground">
-                  This is your unique team identifier (
+                  {t`This is your unique team identifier`} (
                   <code className="font-mono">teamId</code>).
                 </p>
               </div>
@@ -368,7 +370,7 @@ export default function Page() {
                   onClick={() => {
                     if (activeTeam?.id) {
                       navigator.clipboard.writeText(activeTeam.id);
-                      toast.success("Team ID copied to clipboard");
+                      toast.success(t`Team ID copied to clipboard`);
                     }
                   }}
                 >
@@ -378,7 +380,7 @@ export default function Page() {
             </div>
           </div>
         </div>
-        
+
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
