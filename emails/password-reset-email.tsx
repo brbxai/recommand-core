@@ -19,7 +19,7 @@ export const PasswordResetEmail = ({
   resetPasswordLink,
   t = fallbackT,
 }: PasswordResetEmailProps) => (
-  <EmailLayout preview={t`Reset your Recommand password`}>
+  <EmailLayout preview={t`Reset your Recommand password`} t={t}>
     <EmailHeading>{t`Reset your password`}</EmailHeading>
     <Text className="mb-4">{t`Hello ${firstName},`}</Text>
     <Text className="mb-4">

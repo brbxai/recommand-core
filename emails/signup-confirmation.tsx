@@ -13,7 +13,7 @@ export const SignupEmailConfirmation = ({
   confirmationUrl,
   t = fallbackT,
 }: EmailConfirmationProps) => (
-  <EmailLayout preview={t`Confirm your email address`}>
+  <EmailLayout preview={t`Confirm your email address`} t={t}>
     <EmailHeading>{t`Confirm your email`}</EmailHeading>
     <Text className="mb-4">{t`Hello ${firstName},`}</Text>
     <Text className="mb-4">
