@@ -80,6 +80,7 @@ export const getCurrentUser = async (c: Context) => {
 export const createUser = async (userInfo: {
   email: string;
   password: string;
+  language?: string;
 }) => {
   const normalizedEmail = userInfo.email.toLowerCase().trim();
   // Check if user already exists
@@ -101,6 +102,7 @@ export const createUser = async (userInfo: {
     .values({
       email: normalizedEmail,
       passwordHash: hashedPassword,
+      ...(userInfo.language && { language: userInfo.language }),
     })
     .returning({ id: users.id, isAdmin: users.isAdmin });
 
