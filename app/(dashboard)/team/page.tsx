@@ -2,6 +2,7 @@ import { PageTemplate } from "@core/components/page-template";
 import { rc } from "@recommand/lib/client";
 import type { TeamMembers } from "api/team-members";
 import type { Auth } from "api/auth";
+import type { TeamLogo } from "api/team-logo";
 import { useEffect, useState, useCallback } from "react";
 import { DataTable } from "@core/components/data-table";
 import {
@@ -16,8 +17,9 @@ import { Input } from "@core/components/ui/input";
 import { toast } from "@core/components/ui/sonner";
 import { stringifyActionFailure } from "@recommand/lib/utils";
 import type { MinimalTeamMember } from "@core/data/team-members";
-import { useActiveTeam, useHasPermission } from "@core/hooks/user";
-import { Trash2, Loader2, Copy, Shield } from "lucide-react";
+import { useActiveTeam, useHasPermission, useFeatures } from "@core/hooks/user";
+import { AsyncButton } from "@core/components/async-button";
+import { Trash2, Loader2, Copy, Shield, Upload, X } from "lucide-react";
 import { ColumnHeader } from "@core/components/data-table/column-header";
 import { ConfirmDialog } from "@core/components/confirm-dialog";
 import { useNavigate, Link } from "react-router";
@@ -26,6 +28,7 @@ import { useTranslation } from "@core/hooks/use-translation";
 
 const client = rc<TeamMembers>("core");
 const authClient = rc<Auth>("core");
+const teamLogoClient = rc<TeamLogo>("core");
 
 export default function Page() {
   const [teamMembers, setTeamMembers] = useState<MinimalTeamMember[]>([]);
@@ -34,10 +37,15 @@ export default function Page() {
   const [newMemberEmail, setNewMemberEmail] = useState("");
   const [isAddingMember, setIsAddingMember] = useState(false);
   const [isDeletingTeam, setIsDeletingTeam] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [isRemovingLogo, setIsRemovingLogo] = useState(false);
+  const [teamName, setTeamName] = useState("");
   const activeTeam = useActiveTeam();
   const navigate = useNavigate();
   const canManageTeam = useHasPermission("core.team.manage");
+  const fetchTeams = useUserStore((x) => x.fetchTeams);
   const { t } = useTranslation();
+  const { teamLogoEnabled } = useFeatures();
 
   const fetchTeamMembers = useCallback(async () => {
     if (!activeTeam?.id) {
@@ -83,6 +91,31 @@ export default function Page() {
     fetchTeamMembers();
   }, [fetchTeamMembers]);
 
+  useEffect(() => {
+    if (activeTeam?.name) {
+      setTeamName(activeTeam.name);
+    }
+  }, [activeTeam?.name]);
+
+  const handleSaveTeamName = async () => {
+    if (!activeTeam?.id || !teamName.trim()) return;
+    try {
+      const response = await authClient["auth"]["teams"][":teamId"].$put({
+        param: { teamId: activeTeam.id },
+        json: { name: teamName.trim() },
+      });
+      const json = await response.json();
+      if (!json.success) {
+        throw new Error(stringifyActionFailure(json.errors));
+      }
+      await fetchTeams();
+      toast.success(t`Team name updated`);
+    } catch (error) {
+      console.error("Error updating team name:", error);
+      toast.error(t`Failed to update team name`);
+    }
+  };
+
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeTeam?.id || !newMemberEmail.trim()) {
@@ -110,6 +143,60 @@ export default function Page() {
       toast.error(t`Failed to add team member`);
     } finally {
       setIsAddingMember(false);
+    }
+  };
+
+  const handleUploadLogo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !activeTeam?.id) return;
+
+    setIsUploadingLogo(true);
+    try {
+      const formData = new FormData();
+      formData.append("logo", file);
+
+      const response = await fetch(`/api/core/auth/teams/${activeTeam.id}/logo`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const json = await response.json();
+      if (!json.success) {
+        throw new Error(stringifyActionFailure(json.errors));
+      }
+
+      await fetchTeams();
+      toast.success(t`Logo uploaded successfully`);
+    } catch (error) {
+      console.error("Error uploading logo:", error);
+      toast.error(t`Failed to upload logo`);
+    } finally {
+      setIsUploadingLogo(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleRemoveLogo = async () => {
+    if (!activeTeam?.id) return;
+
+    setIsRemovingLogo(true);
+    try {
+      const response = await teamLogoClient["auth"]["teams"][":teamId"]["logo"].$delete({
+        param: { teamId: activeTeam.id },
+      });
+
+      const json = await response.json();
+      if (!json.success) {
+        throw new Error(stringifyActionFailure(json.errors));
+      }
+
+      await fetchTeams();
+      toast.success(t`Logo removed successfully`);
+    } catch (error) {
+      console.error("Error removing logo:", error);
+      toast.error(t`Failed to remove logo`);
+    } finally {
+      setIsRemovingLogo(false);
     }
   };
 
@@ -330,25 +417,71 @@ export default function Page() {
         </div>
         <div className="rounded-lg border p-4 space-y-4 max-w-xl bg-muted">
           <div className="space-y-3">
+            {teamLogoEnabled && (
+            <div>
+              <label className="text-sm font-medium">{t`Team Logo`}</label>
+              <div className="flex items-center gap-4 mt-2">
+                <div className="flex size-16 items-center justify-center rounded-lg border bg-background p-2 overflow-hidden">
+                  <img
+                    src={activeTeam?.logoUrl || "/icon.svg"}
+                    alt={activeTeam?.name ?? ""}
+                    className="size-full object-contain"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={isUploadingLogo}
+                    onClick={() => document.getElementById("logo-upload")?.click()}
+                  >
+                    {isUploadingLogo ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Upload className="h-4 w-4 mr-2" />
+                    )}
+                    {activeTeam?.logoUrl ? t`Change Logo` : t`Upload Logo`}
+                  </Button>
+                  {activeTeam?.logoUrl && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={isRemovingLogo}
+                      onClick={handleRemoveLogo}
+                    >
+                      {isRemovingLogo ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <X className="h-4 w-4 mr-2" />
+                      )}
+                      {t`Remove`}
+                    </Button>
+                  )}
+                </div>
+                <input
+                  id="logo-upload"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                  className="hidden"
+                  onChange={handleUploadLogo}
+                />
+              </div>
+            </div>
+            )}
             <div>
               <label className="text-sm font-medium">{t`Team Name`}</label>
               <div className="flex items-center gap-2">
                 <Input
-                  value={activeTeam?.name ?? ""}
-                  readOnly
-                  className="font-mono"
+                  value={teamName}
+                  onChange={(e) => setTeamName(e.target.value)}
                 />
-                <Button
+                <AsyncButton
                   variant="outline"
-                  onClick={() => {
-                    if (activeTeam?.name) {
-                      navigator.clipboard.writeText(activeTeam.name);
-                      toast.success(t`Team name copied to clipboard`);
-                    }
-                  }}
+                  onClick={handleSaveTeamName}
+                  disabled={!teamName.trim() || teamName.trim() === activeTeam?.name}
                 >
-                  <Copy className="h-4 w-4" />
-                </Button>
+                  {t`Save`}
+                </AsyncButton>
               </div>
             </div>
             <div>

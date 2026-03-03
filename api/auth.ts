@@ -8,7 +8,8 @@ import { db } from "@recommand/db";
 import { users, userPermissions } from "@core/db/schema";
 import { eq, inArray, and, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
-import { createTeam, getUserTeams, updateTeam, deleteTeam } from "@core/data/teams";
+import { createTeam, getUserTeams, updateTeam, deleteTeam, resolveTeamLogoUrl } from "@core/data/teams";
+import { isS3Enabled, isTeamLogoEnabled } from "@core/lib/s3";
 import { requireAdmin, requireAuth, requireTeamAccess } from "@core/lib/auth-middleware";
 import { withTranslation } from "@core/lib/translation-middleware";
 import { getCompletedOnboardingSteps } from "@core/data/onboarding";
@@ -177,8 +178,13 @@ const me = server.get("/auth/me", requireAuth(), withTranslation(), async (c) =>
       actionSuccess({
         data: {
           ...user,
+          teams: user.teams?.map(resolveTeamLogoUrl),
           completedOnboardingSteps,
           teamPermissions,
+          features: {
+            s3Enabled: isS3Enabled(),
+            teamLogoEnabled: isTeamLogoEnabled(),
+          },
         },
       })
     );
@@ -196,7 +202,7 @@ const teams = server.get("/auth/teams", requireAuth(), withTranslation(), async 
       return c.json(actionFailure(t`Unauthorized`), 401);
     }
     const userTeams = await getUserTeams(userId);
-    return c.json(actionSuccess({ data: userTeams }));
+    return c.json(actionSuccess({ data: userTeams.map(resolveTeamLogoUrl) }));
   } catch (e) {
     console.error(e);
     return c.json(actionFailure(t`Internal server error`), 500);
@@ -238,7 +244,7 @@ const createTeamEndpoint = server.post(
         teamDescription: data.teamDescription,
       });
 
-      return c.json(actionSuccess({ data: team }));
+      return c.json(actionSuccess({ data: resolveTeamLogoUrl(team) }));
     } catch (e) {
       console.error(e);
       return c.json(actionFailure(t`Internal server error`), 500);
@@ -528,7 +534,7 @@ const updateTeamEndpoint = server.put(
 
       const updatedTeam = await updateTeam(team.id, data);
 
-      return c.json(actionSuccess({ data: updatedTeam }));
+      return c.json(actionSuccess({ data: resolveTeamLogoUrl(updatedTeam) }));
     } catch (e) {
       console.error(e);
       return c.json(actionFailure(t`Internal server error`), 500);

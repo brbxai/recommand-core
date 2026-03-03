@@ -41,3 +41,7 @@ export function useHasPermission(permissionId: string) {
   const hasPermission = usePermissionChecker();
   return hasPermission(permissionId);
 }
+
+export function useFeatures() {
+  return useUserStore(x => x.features);
+}

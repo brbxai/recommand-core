@@ -32,6 +32,9 @@ interface UserState {
 
   // Permissions per team (keyed by teamId)
   teamPermissions: Record<string, string[]>;
+
+  // Feature flags from server
+  features: { s3Enabled: boolean; teamLogoEnabled: boolean };
 }
 
 const client = rc<Auth>("core");
@@ -93,6 +96,7 @@ export const useUserStore = create<UserState>((set, get) => ({
   teamsAreLoaded: false,
   activeTeam: null,
   teamPermissions: {},
+  features: { s3Enabled: false, teamLogoEnabled: false },
 
   fetchUser: async () => {
     try {
@@ -112,6 +116,7 @@ export const useUserStore = create<UserState>((set, get) => ({
           isLoading: false,
           completedOnboardingSteps: transformedUser.completedOnboardingSteps,
           teamPermissions: transformedUser.teamPermissions ?? {},
+          features: (userData.data as any).features ?? { s3Enabled: false, teamLogoEnabled: false },
         });
       } else if (!userData.success) {
         set({
@@ -230,10 +235,15 @@ export const useUserStore = create<UserState>((set, get) => ({
         ? transformedTeams.find(team => team.id === storedTeamId)
         : null;
 
+      const currentActiveTeam = get().activeTeam;
+      const refreshedActiveTeam = currentActiveTeam
+        ? transformedTeams.find(team => team.id === currentActiveTeam.id) ?? currentActiveTeam
+        : storedTeam || transformedTeams[0] || null;
+
       set({
         teams: transformedTeams,
         teamsAreLoaded: true,
-        activeTeam: get().activeTeam || storedTeam || transformedTeams[0] || null,
+        activeTeam: refreshedActiveTeam,
       });
     } else {
       set({

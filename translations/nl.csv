@@ -214,3 +214,16 @@ Failed to change password,Wachtwoord wijzigen mislukt
 Current password is incorrect,Huidig wachtwoord is onjuist
 Best regards\,,Met vriendelijke groet\,
 The Recommand Team,Het Recommand Team
+Team name updated,Teamnaam bijgewerkt
+Team Logo,Teamlogo
+Upload Logo,Logo uploaden
+Change Logo,Logo wijzigen
+Remove,Verwijderen
+Logo uploaded successfully,Logo succesvol geüpload
+Failed to upload logo,Logo uploaden mislukt
+Logo removed successfully,Logo succesvol verwijderd
+Failed to remove logo,Logo verwijderen mislukt
+File storage is not enabled,Bestandsopslag is niet ingeschakeld
+No logo file provided,Geen logobestand opgegeven
+Invalid file type. Allowed: PNG\, JPEG\, WebP\, SVG,Ongeldig bestandstype. Toegestaan: PNG\, JPEG\, WebP\, SVG
+File too large. Maximum size is 2MB,Bestand te groot. Maximale grootte is 2MB
