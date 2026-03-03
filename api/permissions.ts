@@ -3,6 +3,7 @@ import { z } from "zod";
 import { actionFailure, actionSuccess } from "@recommand/lib/utils";
 import { Server } from "@recommand/lib/api";
 import { requireTeamAccess } from "@core/lib/auth-middleware";
+import { withTranslation } from "@core/lib/translation-middleware";
 import {
   grantPermission,
   revokePermission,
@@ -21,6 +22,7 @@ const _getPermissions = server.get(
   "/auth/teams/:teamId/permissions",
   requireTeamAccess(),
   requirePermission("core.team.manage"),
+  withTranslation(),
   zodValidator(
     "param",
     z.object({
@@ -28,11 +30,12 @@ const _getPermissions = server.get(
     })
   ),
   async (c) => {
+    const t = c.get("t");
     try {
       const teamId = c.get("team").id;
       const actorUserId = c.var.user?.id;
       if (!actorUserId) {
-        return c.json(actionFailure("User ID is required"), 400);
+        return c.json(actionFailure(t`User ID is required`), 400);
       }
 
       const allPermissions = getRegisteredPermissions();
@@ -47,7 +50,7 @@ const _getPermissions = server.get(
       }));
     } catch (error) {
       console.error(error);
-      return c.json(actionFailure("Internal server error"), 500);
+      return c.json(actionFailure(t`Internal server error`), 500);
     }
   }
 );
@@ -56,6 +59,7 @@ const _getUserPermissions = server.get(
   "/auth/teams/:teamId/members/:userId/permissions",
   requireTeamAccess(),
   requirePermission("core.team.manage"),
+  withTranslation(),
   zodValidator(
     "param",
     z.object({
@@ -64,6 +68,7 @@ const _getUserPermissions = server.get(
     })
   ),
   async (c) => {
+    const t = c.get("t");
     try {
       const { userId } = c.req.valid("param");
       const teamId = c.get("team").id;
@@ -72,7 +77,7 @@ const _getUserPermissions = server.get(
       return c.json(actionSuccess({ permissions }));
     } catch (error) {
       console.error(error);
-      return c.json(actionFailure("Internal server error"), 500);
+      return c.json(actionFailure(t`Internal server error`), 500);
     }
   }
 );
@@ -81,6 +86,7 @@ const _checkPermission = server.get(
   "/auth/teams/:teamId/members/:userId/permissions/:permissionId",
   requireTeamAccess(),
   requirePermission("core.team.manage"),
+  withTranslation(),
   zodValidator(
     "param",
     z.object({
@@ -90,6 +96,7 @@ const _checkPermission = server.get(
     })
   ),
   async (c) => {
+    const t = c.get("t");
     try {
       const { userId, permissionId } = c.req.valid("param");
       const teamId = c.get("team").id;
@@ -98,7 +105,7 @@ const _checkPermission = server.get(
       return c.json(actionSuccess({ hasPermission: has }));
     } catch (error) {
       console.error(error);
-      return c.json(actionFailure("Internal server error"), 500);
+      return c.json(actionFailure(t`Internal server error`), 500);
     }
   }
 );
@@ -107,6 +114,7 @@ const _grantPermission = server.post(
   "/auth/teams/:teamId/members/:userId/permissions",
   requireTeamAccess(),
   requirePermission("core.team.manage"),
+  withTranslation(),
   zodValidator(
     "param",
     z.object({
@@ -121,13 +129,14 @@ const _grantPermission = server.post(
     })
   ),
   async (c) => {
+    const t = c.get("t");
     try {
       const { userId } = c.req.valid("param");
       const { permissionId } = c.req.valid("json");
       const teamId = c.get("team").id;
       const actorUserId = c.var.user?.id;
       if (!actorUserId) {
-        return c.json(actionFailure("User ID is required"), 400);
+        return c.json(actionFailure(t`User ID is required`), 400);
       }
 
       const permission = await grantPermission(userId, teamId, permissionId, actorUserId);
@@ -140,7 +149,7 @@ const _grantPermission = server.post(
         return c.json(actionFailure(error.message), 403);
       }
       console.error(error);
-      return c.json(actionFailure("Internal server error"), 500);
+      return c.json(actionFailure(t`Internal server error`), 500);
     }
   }
 );
@@ -149,6 +158,7 @@ const _revokePermission = server.delete(
   "/auth/teams/:teamId/members/:userId/permissions/:permissionId",
   requireTeamAccess(),
   requirePermission("core.team.manage"),
+  withTranslation(),
   zodValidator(
     "param",
     z.object({
@@ -158,17 +168,18 @@ const _revokePermission = server.delete(
     })
   ),
   async (c) => {
+    const t = c.get("t");
     try {
       const { userId, permissionId } = c.req.valid("param");
       const teamId = c.get("team").id;
       const actorUserId = c.var.user?.id;
       if (!actorUserId) {
-        return c.json(actionFailure("User ID is required"), 400);
+        return c.json(actionFailure(t`User ID is required`), 400);
       }
 
       const wasRevoked = await revokePermission(userId, teamId, permissionId, actorUserId);
       if (!wasRevoked) {
-        return c.json(actionFailure("Permission not found"), 404);
+        return c.json(actionFailure(t`Permission not found`), 404);
       }
       return c.json(actionSuccess());
     } catch (error) {
@@ -179,7 +190,7 @@ const _revokePermission = server.delete(
         return c.json(actionFailure(error.message), 403);
       }
       console.error(error);
-      return c.json(actionFailure("Internal server error"), 500);
+      return c.json(actionFailure(t`Internal server error`), 500);
     }
   }
 );
