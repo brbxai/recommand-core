@@ -12,6 +12,7 @@ import permissions from "./api/permissions";
 import translations from "./api/translations";
 import languages from "./api/languages";
 import account from "./api/account";
+import teamLogo from "./api/team-logo";
 
 let logger: Logger;
 
@@ -39,5 +40,6 @@ server.route("/", permissions);
 server.route("/", translations);
 server.route("/", languages);
 server.route("/", account);
+server.route("/", teamLogo);
 
 export default server;

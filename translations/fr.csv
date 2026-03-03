@@ -214,3 +214,16 @@ Failed to change password,Échec du changement de mot de passe
 Current password is incorrect,Le mot de passe actuel est incorrect
 Best regards\,,Cordialement\,
 The Recommand Team,L'équipe Recommand
+Team name updated,Nom de l'équipe mis à jour
+Team Logo,Logo de l'équipe
+Upload Logo,Télécharger le logo
+Change Logo,Changer le logo
+Remove,Supprimer
+Logo uploaded successfully,Logo téléchargé avec succès
+Failed to upload logo,Échec du téléchargement du logo
+Logo removed successfully,Logo supprimé avec succès
+Failed to remove logo,Échec de la suppression du logo
+File storage is not enabled,Le stockage de fichiers n'est pas activé
+No logo file provided,Aucun fichier de logo fourni
+Invalid file type. Allowed: PNG\, JPEG\, WebP\, SVG,Type de fichier invalide. Autorisé : PNG\, JPEG\, WebP\, SVG
+File too large. Maximum size is 2MB,Fichier trop volumineux. Taille maximale : 2 Mo

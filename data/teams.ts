@@ -1,6 +1,7 @@
 import { teamMembers, teams, userPermissions } from "@core/db/schema";
 import { emitBackendEvent, CORE_BACKEND_EVENTS } from "@core/lib/backend-events";
 import { getTeamCreationPermissions } from "@core/lib/permissions";
+import { presignUrl, isTeamLogoEnabled } from "@core/lib/s3";
 import { db } from "@recommand/db";
 import { and, count, eq } from "drizzle-orm";
 
@@ -60,7 +61,7 @@ export async function isMember(userId: string, teamId: string) {
 
 export async function updateTeam(
   teamId: string,
-  updates: Partial<Pick<typeof teams.$inferInsert, 'name' | 'teamDescription'>>
+  updates: Partial<Pick<typeof teams.$inferInsert, 'name' | 'teamDescription' | 'logoUrl'>>
 ) {
   const [updatedTeam] = await db
     .update(teams)
@@ -68,6 +69,14 @@ export async function updateTeam(
     .where(eq(teams.id, teamId))
     .returning();
   return updatedTeam;
+}
+
+export function resolveTeamLogoUrl(team: Team): Team & { logoUrl: string | null } {
+  if (!team.logoUrl || !isTeamLogoEnabled()) return team;
+  return {
+    ...team,
+    logoUrl: presignUrl(team.logoUrl, { expiresIn: 7 * 24 * 60 * 60 }), // 7 days
+  };
 }
 
 export async function deleteTeam(teamId: string) {

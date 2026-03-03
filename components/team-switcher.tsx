@@ -1,4 +1,4 @@
-import { ChevronsUpDown, Plus, GalleryVerticalEnd, Pencil, Search } from "lucide-react";
+import { ChevronsUpDown, Plus, Pencil, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   DropdownMenu,
@@ -171,19 +171,6 @@ export function TeamSwitcher({
     );
   }
 
-  // Transform team data for display
-  const transformedTeams = teams.map((team) => ({
-    name: team.name,
-    logo: GalleryVerticalEnd,
-    plan: team.teamDescription,
-  }));
-
-  const transformedActiveTeam = {
-    name: activeTeam.name,
-    logo: GalleryVerticalEnd,
-    plan: activeTeam.teamDescription,
-  };
-
   return (
     <>
       <SidebarMenu>
@@ -202,15 +189,15 @@ export function TeamSwitcher({
                 size="lg"
                 className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
               >
-                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <transformedActiveTeam.logo className="size-4" />
+                <div className="flex aspect-square size-10 items-center justify-center rounded-lg border bg-muted p-1 overflow-hidden">
+                  <img src={activeTeam.logoUrl || "/icon.svg"} alt={activeTeam.name} className="size-full object-contain" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">
-                    {transformedActiveTeam.name}
+                    {activeTeam.name}
                   </span>
                   <span className="truncate text-xs">
-                    {transformedActiveTeam.plan}
+                    {activeTeam.teamDescription}
                   </span>
                 </div>
                 <ChevronsUpDown className="ml-auto" />
@@ -261,8 +248,8 @@ export function TeamSwitcher({
                             setSearchQuery("");
                           }}
                         >
-                          <div className="flex size-6 items-center justify-center rounded-md border">
-                            <GalleryVerticalEnd className="size-3.5 shrink-0" />
+                          <div className="flex size-8 items-center justify-center rounded-lg border bg-muted p-0.5 overflow-hidden">
+                            <img src={team.logoUrl || "/icon.svg"} alt={team.name} className="size-full object-contain" />
                           </div>
                           {team.name}
                         </div>
@@ -306,8 +293,8 @@ export function TeamSwitcher({
                               setSearchQuery("");
                             }}
                           >
-                            <div className="flex size-6 items-center justify-center rounded-md border">
-                              <GalleryVerticalEnd className="size-3.5 shrink-0" />
+                            <div className="flex size-8 items-center justify-center rounded-lg border bg-muted p-0.5 overflow-hidden">
+                              <img src={team.logoUrl || "/icon.svg"} alt={team.name} className="size-full object-contain" />
                             </div>
                             {team.name}
                           </DropdownMenuItem>
@@ -333,8 +320,8 @@ export function TeamSwitcher({
                           setIsDropdownOpen(false);
                         }}
                       >
-                        <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
-                          <Plus className="size-4" />
+                        <div className="flex size-8 items-center justify-center rounded-lg border bg-muted">
+                          <Plus className="size-5" />
                         </div>
                         <div>{t`Add team`}</div>
                       </DropdownMenuItem>
@@ -354,8 +341,8 @@ export function TeamSwitcher({
                               >
                                 <Link to={item.href}>
                                   {item.icon && (
-                                    <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
-                                      <item.icon className="size-4" />
+                                    <div className="flex size-8 items-center justify-center rounded-lg border bg-muted">
+                                      <item.icon className="size-5" />
                                     </div>
                                   )}
                                   <span>{item.title}</span>
@@ -370,8 +357,8 @@ export function TeamSwitcher({
                                 className="gap-2 p-2"
                               >
                                 {item.icon && (
-                                  <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
-                                    <item.icon className="size-4" />
+                                  <div className="flex size-8 items-center justify-center rounded-lg border bg-muted">
+                                    <item.icon className="size-5" />
                                   </div>
                                 )}
                                 <span>{item.title}</span>
