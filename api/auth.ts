@@ -82,8 +82,9 @@ const signup = server.post(
     try {
       const data = c.req.valid("json");
 
-      // Create user with email verification token
-      const user = await createUser(data);
+      // Create user with email verification token, using the detected language
+      const language = c.get("language");
+      const user = await createUser({ ...data, language });
 
       // Generate email verification token
       const verificationToken = generateSecureToken();
