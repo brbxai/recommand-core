@@ -21,7 +21,7 @@ export const TeamInvitationEmail = ({
   resetPasswordLink = "https://example.com/reset-password/token",
   t = fallbackT,
 }: TeamInvitationEmailProps) => (
-  <EmailLayout preview={t`You've been invited to join ${teamName} on Recommand`}>
+  <EmailLayout preview={t`You've been invited to join ${teamName} on Recommand`} t={t}>
     <EmailHeading>{t`You're invited`}</EmailHeading>
     <Text className="mb-4">{t`Hello ${firstName},`}</Text>
     <Text className="mb-4">
