@@ -197,3 +197,18 @@ Update team,Mettre à jour l'équipe
 Create Team,Créer une équipe
 Add a new team to get started.,Ajoutez une nouvelle équipe pour commencer.
 No results.,Aucun résultat.
+Account,Compte
+Dashboard,Tableau de bord
+Manage your account settings,Gérez les paramètres de votre compte
+Profile,Profil
+Your personal information,Vos informations personnelles
+Language,Langue
+Select a language,Sélectionnez une langue
+Profile updated,Profil mis à jour
+Failed to update profile,Échec de la mise à jour du profil
+Update your password,Mettre à jour votre mot de passe
+Current password,Mot de passe actuel
+Password must be at least 8 characters,Le mot de passe doit contenir au moins 8 caractères
+Password changed successfully,Mot de passe modifié avec succès
+Failed to change password,Échec du changement de mot de passe
+Current password is incorrect,Le mot de passe actuel est incorrect
