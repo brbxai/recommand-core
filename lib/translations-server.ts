@@ -1,4 +1,4 @@
-import { readFileSync } from "fs";
+import { readFileSync, readdirSync } from "fs";
 import { join } from "path";
 import { getApps } from "@recommand/lib/app";
 import { createT, type TranslationFunction } from "./translations";
@@ -93,4 +93,35 @@ export async function createServerT(
 ): Promise<TranslationFunction> {
   const translations = await loadTranslations(language);
   return createT(translations);
+}
+
+/**
+ * Get all supported language codes by scanning translation CSV files
+ * across all packages.
+ */
+export async function getSupportedLanguages(): Promise<string[]> {
+  const apps = await getApps();
+  const languageCodes = new Set<string>(["en"]);
+
+  for (const app of apps) {
+
+    // Skip framework and core packages, as we want the supported languages to be defined by other packages
+    if (app.name === "framework" || app.name === "core") {
+      continue;
+    }
+    
+    try {
+      const translationsDir = join(app.absolutePath, "translations");
+      const files = readdirSync(translationsDir);
+      for (const file of files) {
+        if (file.endsWith(".csv")) {
+          languageCodes.add(file.replace(".csv", ""));
+        }
+      }
+    } catch {
+      // No translations directory for this package
+    }
+  }
+
+  return Array.from(languageCodes);
 }

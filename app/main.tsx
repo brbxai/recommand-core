@@ -1,17 +1,12 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { toast, Toaster } from '../components/ui/sonner';
 import { BrowserRouter, Route, Routes, useLocation, useNavigate } from 'react-router'
 import { routes } from 'virtual:recommand-file-based-router'
 import './index.css'
 import { useMenuItemActions } from '@core/lib/menu-store';
 import { useTranslation } from '@core/hooks/use-translation';
-import { KeyRound, Lock, LogOut, Users } from 'lucide-react';
+import { KeyRound, LogOut, User, Users } from 'lucide-react';
 import { useUserStore } from '@core/lib/user-store';
-import { rc } from '@recommand/lib/client';
-import type { Auth } from '@core/api/auth';
-import { stringifyActionFailure } from '@recommand/lib/utils';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@core/components/ui/dialog';
-import { Button } from '@core/components/ui/button';
 
 const renderRoute = (r: typeof routes[number]) => {
     return (
@@ -26,22 +21,10 @@ const renderRoute = (r: typeof routes[number]) => {
     )
 }
 
-const client = rc<Auth>("core");
-
 export default function Main({ children }: { children: React.ReactNode }) {
     const { registerMenuItem } = useMenuItemActions();
     const logout = useUserStore(state => state.logout);
-    const user = useUserStore(state => state.user);
     const { t } = useTranslation();
-    const [passwordResetDialog, setPasswordResetDialog] = useState<{
-        open: boolean;
-        title: string;
-        description: string;
-    }>({
-        open: false,
-        title: '',
-        description: '',
-    });
 
     useEffect(() => {
 
@@ -61,47 +44,10 @@ export default function Main({ children }: { children: React.ReactNode }) {
         });
 
         registerMenuItem({
-            id: 'user.session.change_password',
-            title: t`Change password`,
-            icon: Lock,
-            onClick: async () => {
-                if (!user?.email) {
-                    setPasswordResetDialog({
-                        open: true,
-                        title: t`Unable to change password`,
-                        description: t`User email not available`,
-                    });
-                    return;
-                }
-
-                try {
-                    const res = await client.auth["request-password-reset"].$post({
-                        json: { email: user.email },
-                    });
-                    const data = await res.json();
-
-                    if (data.success) {
-                        setPasswordResetDialog({
-                            open: true,
-                            title: t`Password reset email sent`,
-                            description: t`Check your email for instructions to reset your password`,
-                        });
-                    } else {
-                        setPasswordResetDialog({
-                            open: true,
-                            title: t`Failed to send reset link`,
-                            description: stringifyActionFailure(data.errors),
-                        });
-                    }
-                } catch (err) {
-                    setPasswordResetDialog({
-                        open: true,
-                        title: t`Failed to send reset link`,
-                        description:
-                            err instanceof Error ? err.message : t`An unexpected error occurred`,
-                    });
-                }
-            }
+            id: 'user.session.account',
+            title: t`Account`,
+            icon: User,
+            href: '/account',
         });
 
         registerMenuItem({
@@ -118,25 +64,12 @@ export default function Main({ children }: { children: React.ReactNode }) {
             }
         });
 
-    }, [logout, user, t]);
+    }, [logout, t]);
 
     return <BrowserRouter>
         {children}
         <RouterInner />
         <Toaster richColors />
-        <Dialog open={passwordResetDialog.open} onOpenChange={(open) => setPasswordResetDialog(prev => ({ ...prev, open }))}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>{passwordResetDialog.title}</DialogTitle>
-                    <DialogDescription>{passwordResetDialog.description}</DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                    <Button onClick={() => setPasswordResetDialog(prev => ({ ...prev, open: false }))}>
-                        {t`Close`}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
     </BrowserRouter>;
 }
 
