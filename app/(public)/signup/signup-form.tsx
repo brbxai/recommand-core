@@ -17,6 +17,8 @@ import { rc } from "@recommand/lib/client";
 import type { Auth } from "api/auth";
 import { stringifyActionFailure } from "@recommand/lib/utils";
 import { useTranslation } from "@core/hooks/use-translation";
+import { Checkbox } from "../../../components/ui/checkbox";
+import { useLegalDocuments } from "@core/hooks/use-legal-documents";
 
 const client = rc<Auth>("core");
 
@@ -28,11 +30,23 @@ export default function SignupForm({
   const [password, setPassword] = useState("");
   const [isSignupComplete, setIsSignupComplete] = useState(false);
   const [isResending, setIsResending] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const { signup } = useUserStore();
   const { t } = useTranslation();
+  const {
+    hasLegalDocuments,
+    hasTermsOfUse,
+    hasPrivacyPolicy,
+    termsOfUseUrls,
+    privacyPolicyUrls,
+  } = useLegalDocuments();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (hasLegalDocuments && !acceptedTerms) {
+      toast.error(t`You must accept the terms to continue`);
+      return;
+    }
     try {
       const response = await signup(email, password);
       if (response?.success) {
@@ -171,7 +185,50 @@ export default function SignupForm({
                   }
                 />
               </div>
-              <Button type="submit" className="w-full" tabIndex={3}>
+              {hasLegalDocuments && (
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="terms"
+                    checked={acceptedTerms}
+                    onCheckedChange={(checked) =>
+                      setAcceptedTerms(checked === true)
+                    }
+                  />
+                  <label
+                    htmlFor="terms"
+                    className="text-sm font-normal leading-snug cursor-pointer"
+                  >
+                    {t`I agree to the`}{" "}
+                    {hasTermsOfUse && (
+                      <a
+                        href={termsOfUseUrls[0]}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline underline-offset-4 hover:text-primary"
+                      >
+                        {t`Terms of Use`}
+                      </a>
+                    )}
+                    {hasTermsOfUse && hasPrivacyPolicy && ` ${t`and`} `}
+                    {hasPrivacyPolicy && (
+                      <a
+                        href={privacyPolicyUrls[0]}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline underline-offset-4 hover:text-primary"
+                      >
+                        {t`Privacy Policy`}
+                      </a>
+                    )}
+                  </label>
+                </div>
+              )}
+              <Button
+                type="submit"
+                className="w-full"
+                tabIndex={3}
+                disabled={hasLegalDocuments && !acceptedTerms}
+              >
                 {t`Sign up`}
               </Button>
             </div>
