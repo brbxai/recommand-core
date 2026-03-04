@@ -13,6 +13,7 @@ import translations from "./api/translations";
 import languages from "./api/languages";
 import account from "./api/account";
 import teamLogo from "./api/team-logo";
+import manifest from "./api/manifest";
 
 let logger: Logger;
 
@@ -41,5 +42,6 @@ server.route("/", translations);
 server.route("/", languages);
 server.route("/", account);
 server.route("/", teamLogo);
+server.route("/", manifest);
 
 export default server;
