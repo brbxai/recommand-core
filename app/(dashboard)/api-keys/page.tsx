@@ -333,7 +333,7 @@ export default function Page() {
           </Alert>
         ) : (
           <div className="space-y-4 max-w-2xl">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <Input
                 placeholder={t`New API Key Name`}
                 value={newKeyName}

@@ -389,7 +389,7 @@ export default function Page() {
       ]}
     >
       <div className="space-y-6">
-        <div className="flex items-center gap-4 max-w-xl">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 max-w-xl">
           <Input
             placeholder={t`Email address to invite`}
             value={newMemberEmail}
