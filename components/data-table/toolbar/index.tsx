@@ -24,6 +24,8 @@ interface DataTableToolbarProps<TData> {
   enableGlobalSearch?: boolean; // global search makes the search field work for all columns
   searchPlaceholder?: string;
   filterColumns?: FilterConfig<TData>[];
+  onReset?: () => void;
+  hasCustomFilters?: boolean;
 }
 
 export function DataTableToolbar<TData>({
@@ -32,10 +34,13 @@ export function DataTableToolbar<TData>({
   enableGlobalSearch,
   searchPlaceholder = "Search...",
   filterColumns,
+  onReset,
+  hasCustomFilters,
 }: DataTableToolbarProps<TData>) {
   const isFiltered =
     table.getState().columnFilters.length > 0 ||
-    Boolean(table.getState().globalFilter);
+    Boolean(table.getState().globalFilter) ||
+    Boolean(hasCustomFilters);
 
   return (
     <div className="flex items-center justify-between">
@@ -94,6 +99,7 @@ export function DataTableToolbar<TData>({
               } else if (searchColumn) {
                 table.getColumn(searchColumn as string)?.setFilterValue("");
               }
+              onReset?.();
             }}
             className="h-8 px-2 lg:px-3"
           >
