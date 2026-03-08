@@ -189,7 +189,7 @@ export function TeamSwitcher({
                 size="lg"
                 className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
               >
-                <div className="flex aspect-square size-10 items-center justify-center rounded-lg border bg-muted p-1 overflow-hidden">
+                <div className="flex aspect-square size-10 items-center justify-center rounded-lg border bg-sheet-light p-1 overflow-hidden">
                   <img src={activeTeam.logoUrl || "/icon.svg"} alt={activeTeam.name} className="size-full object-contain" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
@@ -248,7 +248,7 @@ export function TeamSwitcher({
                             setSearchQuery("");
                           }}
                         >
-                          <div className="flex size-8 items-center justify-center rounded-lg border bg-muted p-0.5 overflow-hidden">
+                          <div className="flex size-8 items-center justify-center rounded-lg border bg-sheet-light p-0.5 overflow-hidden">
                             <img src={team.logoUrl || "/icon.svg"} alt={team.name} className="size-full object-contain" />
                           </div>
                           {team.name}
@@ -293,7 +293,7 @@ export function TeamSwitcher({
                               setSearchQuery("");
                             }}
                           >
-                            <div className="flex size-8 items-center justify-center rounded-lg border bg-muted p-0.5 overflow-hidden">
+                            <div className="flex size-8 items-center justify-center rounded-lg border bg-sheet-light p-0.5 overflow-hidden">
                               <img src={team.logoUrl || "/icon.svg"} alt={team.name} className="size-full object-contain" />
                             </div>
                             {team.name}

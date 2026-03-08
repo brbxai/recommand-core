@@ -421,7 +421,7 @@ export default function Page() {
             <div>
               <label className="text-sm font-medium">{t`Team Logo`}</label>
               <div className="flex items-center gap-4 mt-2">
-                <div className="flex size-16 items-center justify-center rounded-lg border bg-background p-2 overflow-hidden">
+                <div className="flex size-16 items-center justify-center rounded-lg border bg-sheet-light p-2 overflow-hidden">
                   <img
                     src={activeTeam?.logoUrl || "/icon.svg"}
                     alt={activeTeam?.name ?? ""}
