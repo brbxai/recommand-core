@@ -6,10 +6,10 @@ import { DataTable } from "@core/components/data-table";
 import {
   type ColumnDef,
   getCoreRowModel,
+  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import type { SortingState } from "@tanstack/react-table";
 import { Button } from "@core/components/ui/button";
 import { Input } from "@core/components/ui/input";
 import { Label } from "@core/components/ui/label";
@@ -37,6 +37,8 @@ import {
   AlertTitle,
 } from "@core/components/ui/alert";
 import { useTranslation } from "@core/hooks/use-translation";
+import { useDataTableState } from "@core/hooks/use-data-table-state";
+import { DataTablePagination } from "@core/components/data-table/pagination";
 
 const client = rc<ApiKeys>("core");
 
@@ -52,7 +54,7 @@ export default function Page() {
     | { jwt: string; type: "jwt"; expiresAt: Date }
     | null
   >(null);
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const { paginationState, onPaginationChange, sortingState, onSortingChange } = useDataTableState({ tableId: "core-api-keys" });
   const [isCreationPermitted, setIsCreationPermitted] = useState<boolean | null>(null);
   const activeTeam = useActiveTeam();
   const { t } = useTranslation();
@@ -312,9 +314,12 @@ export default function Page() {
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    onSortingChange: setSorting,
+    getPaginationRowModel: getPaginationRowModel(),
+    onSortingChange: onSortingChange,
+    onPaginationChange: onPaginationChange,
     state: {
-      sorting,
+      sorting: sortingState,
+      pagination: paginationState,
     },
   });
 
@@ -595,7 +600,10 @@ export default function Page() {
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <DataTable columns={columns} table={table} />
+          <>
+            <DataTable columns={columns} table={table} />
+            <DataTablePagination table={table} />
+          </>
         )}
       </div>
     </PageTemplate>
