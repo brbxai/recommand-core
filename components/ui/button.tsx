@@ -12,7 +12,7 @@ const buttonVariants = cva(
         default:
           "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90",
         destructive:
-          "border border-destructive text-destructive bg-background shadow-xs hover:bg-destructive hover:text-destructive-foreground focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40",
+          "bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40",
         outline:
           "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
         secondary:
@@ -34,7 +34,7 @@ const buttonVariants = cva(
       variant: "default",
       size: "default",
     },
-  }
+  },
 );
 
 type ButtonBaseProps = VariantProps<typeof buttonVariants> & {
@@ -59,7 +59,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       />
     );
-  }
+  },
 );
 Button.displayName = "Button";
 
@@ -67,7 +67,10 @@ function ButtonLink({ className, variant, size, ...props }: ButtonLinkProps) {
   return (
     <a
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }), "cursor-default")}
+      className={cn(
+        buttonVariants({ variant, size, className }),
+        "cursor-default",
+      )}
       {...props}
     />
   );

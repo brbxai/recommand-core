@@ -4,7 +4,8 @@ import { BrowserRouter, Route, Routes, useLocation, useNavigate } from 'react-ro
 import { routes } from 'virtual:recommand-file-based-router'
 import './index.css'
 import { useMenuItemActions } from '@core/lib/menu-store';
-import { KeyRound, Lock, LogOut, Users } from 'lucide-react';
+import { KeyRound, Lock, LogOut, Moon, Sun, Users } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { useUserStore } from '@core/lib/user-store';
 import { rc } from '@recommand/lib/client';
 import type { Auth } from '@core/api/auth';
@@ -31,6 +32,7 @@ export default function Main({ children }: { children: React.ReactNode }) {
     const { registerMenuItem } = useMenuItemActions();
     const logout = useUserStore(state => state.logout);
     const user = useUserStore(state => state.user);
+    const { theme, setTheme } = useTheme();
     const [passwordResetDialog, setPasswordResetDialog] = useState<{
         open: boolean;
         title: string;
@@ -102,6 +104,15 @@ export default function Main({ children }: { children: React.ReactNode }) {
         });
 
         registerMenuItem({
+            id: 'user.session.theme',
+            title: theme === 'dark' ? 'Light mode' : 'Dark mode',
+            icon: theme === 'dark' ? Sun : Moon,
+            onClick: () => {
+                setTheme(theme === 'dark' ? 'light' : 'dark');
+            }
+        });
+
+        registerMenuItem({
             id: 'user.session.logout',
             title: 'Logout',
             icon: LogOut,
@@ -115,7 +126,7 @@ export default function Main({ children }: { children: React.ReactNode }) {
             }
         });
 
-    }, [logout, user]);
+    }, [logout, user, theme, setTheme]);
 
     return <BrowserRouter>
         {children}

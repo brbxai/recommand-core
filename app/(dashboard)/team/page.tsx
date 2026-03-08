@@ -181,9 +181,9 @@ export default function Page() {
       cell: ({ row }) => (
         <div className="flex items-center">
           {row.original.user.emailVerified ? (
-            <span className="text-green-600">✓ Verified</span>
+            <span className="text-folder">✓ Verified</span>
           ) : (
-            <span className="text-orange-600">⚠ Unverified</span>
+            <span className="text-warning">⚠ Unverified</span>
           )}
         </div>
       ),
