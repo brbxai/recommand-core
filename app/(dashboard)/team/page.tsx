@@ -8,10 +8,10 @@ import { DataTable } from "@core/components/data-table";
 import {
   type ColumnDef,
   getCoreRowModel,
+  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import type { SortingState } from "@tanstack/react-table";
 import { Button } from "@core/components/ui/button";
 import { Input } from "@core/components/ui/input";
 import { toast } from "@core/components/ui/sonner";
@@ -25,6 +25,8 @@ import { ConfirmDialog } from "@core/components/confirm-dialog";
 import { useNavigate, Link } from "react-router";
 import { useUserStore } from "@core/lib/user-store";
 import { useTranslation } from "@core/hooks/use-translation";
+import { useDataTableState } from "@core/hooks/use-data-table-state";
+import { DataTablePagination } from "@core/components/data-table/pagination";
 
 const client = rc<TeamMembers>("core");
 const authClient = rc<Auth>("core");
@@ -33,7 +35,6 @@ const teamLogoClient = rc<TeamLogo>("core");
 export default function Page() {
   const [teamMembers, setTeamMembers] = useState<MinimalTeamMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [sorting, setSorting] = useState<SortingState>([]);
   const [newMemberEmail, setNewMemberEmail] = useState("");
   const [isAddingMember, setIsAddingMember] = useState(false);
   const [isDeletingTeam, setIsDeletingTeam] = useState(false);
@@ -46,6 +47,7 @@ export default function Page() {
   const fetchTeams = useUserStore((x) => x.fetchTeams);
   const { t } = useTranslation();
   const { teamLogoEnabled } = useFeatures();
+  const { paginationState, onPaginationChange, sortingState, onSortingChange } = useDataTableState({ tableId: "core-team" });
 
   const fetchTeamMembers = useCallback(async () => {
     if (!activeTeam?.id) {
@@ -271,9 +273,9 @@ export default function Page() {
       cell: ({ row }) => (
         <div className="flex items-center">
           {row.original.user.emailVerified ? (
-            <span className="text-green-600">{t`Verified`}</span>
+            <span className="text-folder">{t`Verified`}</span>
           ) : (
-            <span className="text-orange-600">{t`Unverified`}</span>
+            <span className="text-warning">{t`Unverified`}</span>
           )}
         </div>
       ),
@@ -353,9 +355,12 @@ export default function Page() {
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    onSortingChange: setSorting,
+    getPaginationRowModel: getPaginationRowModel(),
+    onSortingChange: onSortingChange,
+    onPaginationChange: onPaginationChange,
     state: {
-      sorting,
+      sorting: sortingState,
+      pagination: paginationState,
     },
   });
 
@@ -421,7 +426,7 @@ export default function Page() {
             <div>
               <label className="text-sm font-medium">{t`Team Logo`}</label>
               <div className="flex items-center gap-4 mt-2">
-                <div className="flex size-16 items-center justify-center rounded-lg border bg-background p-2 overflow-hidden">
+                <div className="flex size-16 items-center justify-center rounded-lg border bg-sheet-light p-2 overflow-hidden">
                   <img
                     src={activeTeam?.logoUrl || "/icon.svg"}
                     alt={activeTeam?.name ?? ""}
@@ -519,7 +524,10 @@ export default function Page() {
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <DataTable columns={columns} table={table} />
+          <>
+            <DataTable columns={columns} table={table} />
+            <DataTablePagination table={table} />
+          </>
         )}
       </div>
     </PageTemplate>

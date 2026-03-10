@@ -18,7 +18,7 @@ import { cva } from "class-variance-authority";
 import * as React from "react";
 import { fallbackT, type TranslationFunction } from "../../lib/translations";
 import {
-  DARK_GRAY,
+  STONE,
   DARK_SLATE,
   FILES,
   PROGRESS,
@@ -101,17 +101,17 @@ export function EmailLayout({ preview, children, t = fallbackT }: EmailLayoutPro
             </Text>
             <Hr className={`mt-6 mb-4 border-[${SHADOW}]`} />
             <Section className="text-center">
-              <Text className={`text-xs text-[${DARK_GRAY}] my-1`}>
+              <Text className={`text-xs text-[${STONE}] my-1`}>
                 <Link
                   href={websiteUrl}
-                  className={`text-[${DARK_GRAY}] no-underline`}
+                  className={`text-[${STONE}] no-underline`}
                 >
                   Recommand
                 </Link>
                 {" · "}
                 <Link
                   href="mailto:support@recommand.eu"
-                  className={`text-[${DARK_GRAY}] no-underline`}
+                  className={`text-[${STONE}] no-underline`}
                 >
                   support@recommand.eu
                 </Link>

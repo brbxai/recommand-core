@@ -6,13 +6,14 @@ import "dotenv/config";
 interface EmailOptions {
   from?: string;
   to: string;
+  cc?: string;
   subject: string;
   email: ReactElement | string;
   replyTo?: string;
   attachments?: Attachment[];
 }
 
-export async function sendEmail({ to, subject, email, replyTo, from, attachments }: EmailOptions) {
+export async function sendEmail({ to, cc, subject, email, replyTo, from, attachments }: EmailOptions) {
   if (!process.env.POSTMARK_API_KEY) {
     throw new Error("POSTMARK_API_KEY is not set");
   }
@@ -23,6 +24,7 @@ export async function sendEmail({ to, subject, email, replyTo, from, attachments
   const options = {
     From: from || process.env.EMAIL_FROM || "support@recommand.eu",
     To: to,
+    Cc: cc,
     Subject: subject,
     HtmlBody: emailHtml,
     ReplyTo: replyTo,
